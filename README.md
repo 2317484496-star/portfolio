@@ -8,6 +8,12 @@
 
 ---
 
+## 上线
+
+见 [`DEPLOY.md`](./DEPLOY.md) —— 三条命令推到 GitHub Pages，
+或用 `tools/push-to-github.sh` 一条命令做完（建仓库 + 推送 + 开 Pages）。
+
+
 ## 一、放置你的素材
 
 把文件按下面的命名放进 `assets/works/01` … `assets/works/10`（编号与轮盘上的序号一一对应）。

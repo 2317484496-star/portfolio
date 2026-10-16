@@ -1,0 +1,16 @@
+# 行尾统一：仓库里永远存 LF，检出时交给各自平台的惯例处理。
+# 否则在 Windows 上编辑一次就会产生「整文件改动」的假 diff。
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.mp4 binary
+*.webm binary
+*.woff binary
+*.woff2 binary
+
+# 这些是别人发布的产物，不参与 diff / 语言统计
+vendor/*.js linguist-vendored
