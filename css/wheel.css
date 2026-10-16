@@ -1,0 +1,318 @@
+/* ============================================================================
+   wheel.css — 右侧轮盘导航（核心交互件）
+   结构：外圈刻度 → 分段环 → 分段序号 → 中心读数盘 → 顶部指针
+   ========================================================================= */
+
+.rail {
+  grid-area: rail;
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 26px;
+  padding: 18px var(--gutter) 18px 0;
+  border-left: 1px solid var(--hair-lo);
+  z-index: var(--z-rail);
+  background: linear-gradient(270deg, rgba(3,4,9,0.5), rgba(3,4,9,0));
+}
+
+/* ============================ 轮盘本体 ============================ */
+
+.dial {
+  position: relative;
+  width: 100%; max-width: 392px;
+  aspect-ratio: 1;
+  flex: none;
+  touch-action: none;
+  user-select: none;
+  transition: transform 0.7s var(--e-out);
+}
+
+.dial__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.dial__rot { will-change: transform; }
+
+/* —— 分段 —— */
+.seg__hit { fill: transparent; cursor: pointer; }
+.seg__body {
+  fill: rgba(255,255,255,0.028);
+  stroke: rgba(255,255,255,0.085);
+  stroke-width: 1;
+  transition: fill 0.5s var(--e-out), stroke 0.5s var(--e-out);
+}
+.seg__body--acc { opacity: 0.5; transition: opacity 0.5s var(--e-out); }
+.seg:hover .seg__body { fill: rgba(255,255,255,0.075); stroke: rgba(255,255,255,0.28); }
+.seg:hover .seg__body--acc { opacity: 0.85; }
+.seg.is-on .seg__body { fill: rgba(255,255,255,0.1); stroke: rgba(255,255,255,0.55); }
+.seg.is-on .seg__body--acc { opacity: 1; }
+.seg.is-near .seg__body { fill: rgba(255,255,255,0.05); }
+.seg__glow { opacity: 0; transition: opacity 0.5s var(--e-out); filter: blur(6px); }
+.seg.is-on .seg__glow { opacity: 0.9; }
+
+/* —— 径向刻度（分段内） —— */
+.seg__tick { stroke: rgba(255,255,255,0.24); stroke-width: 1; }
+.seg.is-on .seg__tick { stroke: rgba(255,255,255,0.7); }
+
+/* —— 分段序号 —— */
+.seg__idx {
+  font-family: var(--font-disp);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  fill: rgba(255, 255, 255, 0.33);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  transition: fill 0.45s var(--e-out), opacity 0.45s var(--e-out);
+  pointer-events: none;
+}
+.seg.is-near .seg__idx { fill: rgba(255, 255, 255, 0.56); }
+.seg:hover .seg__idx { fill: rgba(255, 255, 255, 0.82); }
+.seg.is-on .seg__idx { fill: #fff; }
+
+/* —— 外圈细刻度 —— */
+.dial__ticks line { stroke: rgba(255,255,255,0.14); stroke-width: 1; }
+.dial__ticks line.is-major { stroke: rgba(255,255,255,0.3); }
+
+/* ============================ 中心读数盘 ============================ */
+
+.dial__hub {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 45.5%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--hair-hi);
+  background: rgba(5,7,14,0.86);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 22px 60px rgba(0,0,0,0.66);
+  z-index: 3;
+  cursor: pointer;
+}
+.dial__hub-media {
+  position: absolute; inset: -6%;
+  background-size: cover; background-position: center;
+  filter: grayscale(0.48) contrast(1.12) brightness(0.62);
+  opacity: 0.82;
+  transform: scale(1.06);
+  transition: opacity 0.7s var(--e-out), filter 0.7s var(--e-out);
+}
+.dial__hub::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 50% 118%, rgba(var(--acc-rgb), 0.46), transparent 60%),
+    linear-gradient(180deg, rgba(4,6,12,0.42), rgba(4,6,12,0.86));
+}
+.dial__hub-inner {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px;
+}
+.dial__num {
+  font-family: var(--font-disp);
+  font-size: clamp(38px, 4.4vw, 56px);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 0 22px rgba(var(--acc-rgb), 0.5);
+  font-variant-numeric: tabular-nums;
+}
+.dial__genre {
+  font-family: var(--font-mono);
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--acc);
+  margin-top: 5px;
+  text-align: center;
+  padding: 0 12px;
+}
+.dial__hub-bar {
+  margin-top: 11px;
+  width: 34px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+}
+
+/* 中心旋转环（与中心盘同尺寸，悬在盘边缘，不被中心盘裁切） */
+.dial__orbit-ring {
+  position: absolute; left: 50%; top: 50%;
+  width: 45.5%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  z-index: 5; pointer-events: none;
+}
+.dial__orbit-spin {
+  position: absolute; inset: -1px; border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    transparent 0deg,
+    rgba(var(--acc-rgb), 0.9) 46deg,
+    transparent 92deg,
+    transparent 180deg,
+    rgba(var(--acc-2-rgb), 0.75) 226deg,
+    transparent 272deg);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.4px), #000 calc(100% - 1.4px));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.4px), #000 calc(100% - 1.4px));
+  animation: orbitspin 7.5s linear infinite;
+  /* conic-gradient + mask 的元素如果不提升为独立层，旋转会逐帧重新光栅化
+     整条渐变并重做遮罩；提升后内容只栅格化一次，之后是纯合成变换。 */
+  will-change: transform;
+}
+@keyframes orbitspin { to { transform: rotate(360deg); } }
+
+/* 声呐脉冲 */
+.dial__pulse {
+  position: absolute; left: 50%; top: 50%;
+  width: 100%; aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(var(--acc-rgb), 0.5);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  animation: sonar 4.5s var(--e-out) infinite;
+}
+@keyframes sonar {
+  0%   { transform: translate(-50%,-50%) scale(0.62); opacity: 0.7; }
+  70%  { opacity: 0; }
+  100% { transform: translate(-50%,-50%) scale(1.28); opacity: 0; }
+}
+
+/* ============================ 顶部指针 ============================ */
+
+.dial__mark {
+  position: absolute;
+  left: 50%; top: -2px;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center;
+  z-index: 6; pointer-events: none;
+}
+.dial__mark-glow {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--acc-rgb), 0.5), transparent 66%);
+  filter: blur(8px);
+  position: absolute; top: -12px;
+}
+.dial__mark-tri {
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid var(--acc);
+  filter: drop-shadow(0 0 6px rgba(var(--acc-rgb), 0.9));
+  position: relative;
+}
+.dial__mark-line {
+  width: 1px; height: 38px;
+  background: linear-gradient(180deg, var(--acc), transparent);
+  margin-top: 2px;
+}
+.dial__mark-tick {
+  position: absolute; top: 46px; left: 50%; transform: translateX(-50%);
+  width: 8px; height: 1px; background: rgba(var(--acc-rgb), 0.8);
+}
+
+/* ============================ 旋转扫掠 ============================ */
+
+.dial__sweep {
+  position: absolute; inset: 0; border-radius: 50%;
+  z-index: 1; pointer-events: none;
+  background: conic-gradient(from 0deg, rgba(var(--acc-rgb), 0.14) 0deg, transparent 34deg);
+  mask: radial-gradient(farthest-side, transparent 46%, #000 48%, #000 92%, transparent 94%);
+  -webkit-mask: radial-gradient(farthest-side, transparent 46%, #000 48%, #000 92%, transparent 94%);
+  animation: orbitspin 5.5s linear infinite;
+  will-change: transform;
+  opacity: 0.85;
+}
+
+/* ============================ 轮盘下方读数 ============================ */
+
+.dial-readout {
+  width: 100%; max-width: 392px;
+  padding-left: 4px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.dial-readout__top {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+}
+.dial-readout__idx { color: var(--acc); }
+.dial-readout__type { color: var(--ink-4); }
+.dial-readout__title {
+  font-family: var(--font-cjk);
+  font-size: 17px; font-weight: 600; line-height: 1.42;
+  color: var(--ink-1);
+  letter-spacing: 0.01em;
+  min-height: 48px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dial-readout__bar {
+  display: flex; gap: 3px; align-items: center; height: 2px;
+}
+.dial-readout__bar b {
+  flex: 1; height: 1px; background: var(--hair);
+  transition: background 0.5s var(--e-out), height 0.4s var(--e-out);
+}
+.dial-readout__bar b.is-on { background: var(--acc); height: 2px; box-shadow: 0 0 8px rgba(var(--acc-rgb), 0.7); }
+.dial-readout__hint { display: flex; align-items: center; gap: 8px; color: var(--ink-4); }
+.dial-readout__hint kbd {
+  font-family: var(--font-mono); font-size: 9px; padding: 2px 5px;
+  border: 1px solid var(--hair); color: var(--ink-3); border-radius: 2px;
+}
+
+/* 提交进度环（SVG 内，随轮盘旋转组之外独立绘制） */
+.dial__commit { pointer-events: none; opacity: 0; transition: opacity 0.3s var(--e-out); }
+.dial__commit.is-run { opacity: 1; }
+.dial__commit circle {
+  fill: none; stroke: var(--acc); stroke-width: 1.5;
+  filter: drop-shadow(0 0 5px rgba(var(--acc-rgb), 0.85));
+  transform: rotate(-90deg); transform-origin: 200px 200px;
+}
+
+/* ============================ 悬停预览卡 ============================ */
+
+.peek {
+  position: fixed;
+  z-index: var(--z-overlay);
+  width: 300px;
+  padding: 13px;
+  display: grid; grid-template-columns: 62px 1fr; gap: 13px;
+  border: 1px solid var(--hair-hi);
+  background: var(--glass-deep);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  box-shadow: 0 26px 70px rgba(0,0,0,0.7);
+  opacity: 0; pointer-events: none;
+  transform: translate(calc(-100% - 14px), -50%) scale(0.96);
+  transition: opacity 0.3s var(--e-out), transform 0.42s var(--e-out);
+}
+.peek.is-on { opacity: 1; transform: translate(calc(-100% - 30px), -50%) scale(1); }
+.peek__thumb {
+  width: 62px; aspect-ratio: 3/4; object-fit: cover;
+  border: 1px solid var(--hair);
+  background: #0A0D16;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.peek__b { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.peek__n { font-family: var(--font-disp); font-size: 11px; letter-spacing: 0.12em; color: var(--acc); }
+.peek__t {
+  font-size: 13.5px; font-weight: 600; line-height: 1.4; color: var(--ink-1);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.peek__d {
+  font-size: 11.5px; line-height: 1.6; color: var(--ink-3);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.peek__tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.peek__tags span {
+  font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.1em;
+  padding: 2px 5px; border: 1px solid var(--hair); color: var(--ink-3);
+}
+.peek::after {
+  content: ""; position: absolute; right: -5px; top: 50%;
+  width: 8px; height: 8px; margin-top: -4px;
+  background: var(--glass-deep); border-right: 1px solid var(--hair-hi); border-top: 1px solid var(--hair-hi);
+  transform: rotate(45deg);
+}
+
+/* ============================ 移动端轮盘抽屉 ============================ */
+
+.rail__fab { display: none; }
+.rail__close { display: none; }

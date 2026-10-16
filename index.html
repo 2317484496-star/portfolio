@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>作品集 · SELECTED WORKS</title>
+<meta name="description" content="AI 影像作品集：10 部短剧的分镜设计与生成过程。分镜设计 / 提示词工程 / AI 影像生成 / 视觉风格设定 / 音效叙事。右侧轮盘浏览。">
+<meta name="author" content="2317484496-star">
+<meta name="keywords" content="分镜设计,AI影像,提示词工程,短剧,Seedance,Higgsfield,分镜,作品集">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#030409">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="作品集 · SELECTED WORKS">
+<meta property="og:title" content="作品集 · 十部作品，十条不同的镜头语言">
+<meta property="og:description" content="10 部 AI 短剧的分镜设计、视觉设定与生成过程。拖拽右侧轮盘浏览。">
+<meta property="og:locale" content="zh_CN">
+<!-- TODO: GitHub Pages 上线后，把下面两行换成完整绝对地址，例如
+     https://2317484496-star.github.io/<仓库名>/ 与 .../assets/og.png
+     页面加载时也会自动补全为绝对地址，但静态绝对地址对爬虫更稳妥 -->
+<meta property="og:url" content="./">
+<meta property="og:image" content="assets/og.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="作品集封面：十部作品，十条不同的镜头语言">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="作品集 · 十部作品，十条不同的镜头语言">
+<meta name="twitter:description" content="10 部 AI 短剧的分镜设计、视觉设定与生成过程。">
+<meta name="twitter:image" content="assets/og.png">
+<link rel="canonical" href="./">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23030409'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%2322E1FF' stroke-width='1.6'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%2322E1FF'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="assets/og.png">
+<link rel="preload" href="css/tokens.css" as="style">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/chrome.css">
+<link rel="stylesheet" href="css/wheel.css">
+<link rel="stylesheet" href="css/stage.css">
+<link rel="stylesheet" href="css/overlays.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+<!-- 键盘用户：跳到主内容 -->
+<a class="skip-link mono" href="#stage">跳到主内容 <kbd>Enter</kbd></a>
+
+<!-- ======================================================== 预加载 -->
+<div id="preloader" role="status" aria-live="polite">
+  <div class="pre__inner">
+    <svg class="pre__sigil" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 6" opacity="0.7"/>
+      <circle cx="24" cy="24" r="12" fill="none" stroke="currentColor" stroke-width="1"/>
+      <circle cx="24" cy="24" r="3.4" fill="currentColor"/>
+    </svg>
+    <div class="pre__log" id="preLog"></div>
+    <div class="pre__bar" id="preBar"><span></span></div>
+    <div class="pre__foot">
+      <span class="pre__pct" id="prePct">0%</span>
+      <span class="pre__skip mono">按任意键跳过 / SKIP</span>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ====================================================== 背景层 -->
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <div id="gl-fallback" aria-hidden="true"></div>
+  <div class="grid-overlay" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- ====================================================== 主栅格 -->
+  <div class="shell">
+
+    <!-- 顶栏 -->
+    <header class="head">
+      <a class="brand" href="#" onclick="return false">
+        <span class="brand__sigil" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="16" cy="16" r="12.5"/>
+            <circle cx="16" cy="16" r="5.5" stroke-dasharray="2 3"/>
+            <path d="M16 1.5v6M16 24.5v6M1.5 16h6M24.5 16h6"/>
+          </svg>
+        </span>
+        <span class="brand__txt">
+          <span class="brand__name" data-site-cjk>作品集</span>
+          <span class="brand__sub"><span data-site-latin>SELECTED WORKS</span> · <span data-site-years>2024 — 2026</span></span>
+          <span class="brand__who mono" data-site-owner></span>
+        </span>
+      </a>
+
+      <span class="head__spacer"></span>
+
+      <div class="readout mono">
+        <span class="readout__item"><span class="pulse"></span><span class="readout__v is-live">ONLINE</span></span>
+        <span class="readout__item"><span class="readout__k">DISCIPLINE</span><span class="readout__v" data-site-disc></span></span>
+        <span class="readout__item"><span class="readout__k">TOTAL</span><span class="readout__v" id="footTotal">10</span></span>
+        <span class="readout__item"><span class="readout__k">SYS</span><span class="readout__v">WEBGL / OK</span></span>
+      </div>
+
+      <nav class="tools" aria-label="视图控制">
+        <button class="tbtn" type="button" id="btnList" aria-pressed="false" title="列表视图（快捷键 L）">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <span class="tbtn__txt">列表视图</span><span class="tbtn__kbd">L</span>
+        </button>
+        <button class="tbtn" type="button" id="btnFull" aria-pressed="false" title="全屏（快捷键 F）">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5"/></svg>
+          <span class="tbtn__txt">全屏</span><span class="tbtn__kbd">F</span>
+        </button>
+        <button class="tbtn tbtn--keep" type="button" id="btnAbout" aria-pressed="false" title="关于（快捷键 A）">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.2"/></svg>
+          <span class="tbtn__txt">关于</span><span class="tbtn__kbd">A</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- 舞台 -->
+    <main class="stage" id="stage" tabindex="-1">
+      <div class="stage__rail" aria-hidden="true"><span></span></div>
+
+      <div class="stage__cand" id="stageCand" aria-hidden="true">
+        <span class="stage__cand-dot"></span>
+        <span class="stage__cand-k mono">候选 / PENDING</span>
+        <span class="stage__cand-n" id="candN">01</span>
+        <span class="stage__cand-t" id="candT">作品标题</span>
+      </div>
+
+      <div class="stage__scroll no-bar" id="stageScroll" tabindex="-1">
+        <div class="stage__inner" id="stageInner">
+
+          <header class="w-head" id="wHead">
+            <div class="w-eyebrow">
+              <span class="w-eyebrow__idx" id="wIdx">01</span>
+              <span class="w-eyebrow__of mono" id="wIdxOf">/ 10</span>
+              <span class="w-eyebrow__sep"></span>
+              <span class="w-eyebrow__cat mono" id="wCat">都市奇幻</span>
+              <span class="w-eyebrow__meta mono">
+                <span id="wYear">2025</span><i></i><span id="wStatus">已完成</span>
+              </span>
+              <button class="w-copy mono" type="button" id="wCopy" title="复制这一部的链接（快捷键 C）">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="11" height="11" aria-hidden="true"><path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.6 1.6"/><path d="M14 10.5a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.6-1.6"/></svg>
+                复制链接
+              </button>
+            </div>
+            <h1 class="w-title" id="wTitle">作品标题</h1>
+            <div class="w-sub mono" id="wSub"></div>
+            <p class="w-logline" id="wLogline"></p>
+            <div class="w-tags" id="wTags"></div>
+          </header>
+
+          <figure class="w-hero" id="wHeroFig">
+            <div class="w-hero__side w-hero__side--l mono" aria-hidden="true"><span id="wHeroSideL"></span></div>
+            <div class="w-hero__frame" id="wHeroFrame">
+              <div class="w-hero__scan" aria-hidden="true"></div>
+              <span class="bracket bracket--tl bracket--acc" aria-hidden="true"></span>
+              <span class="bracket bracket--tr bracket--acc" aria-hidden="true"></span>
+              <span class="bracket bracket--bl bracket--acc" aria-hidden="true"></span>
+              <span class="bracket bracket--br bracket--acc" aria-hidden="true"></span>
+              <button class="w-hero__play" id="wPlay" type="button" aria-label="播放正片">
+                <svg class="w-hero__play-txt" viewBox="0 0 122 122" aria-hidden="true">
+                  <defs><path id="playCircle" d="M61,61 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"/></defs>
+                  <text><textPath href="#playCircle">PLAY · 预告片 · PLAY · 预告片 ·</textPath></text>
+                </svg>
+                <svg class="w-hero__play-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+              </button>
+              <div class="w-hero__tc mono" id="wHeroTc"></div>
+              <div class="w-hero__badge mono" id="wHeroBadge"></div>
+            </div>
+            <div class="w-hero__side w-hero__side--r mono" aria-hidden="true"><span id="wHeroSideR"></span></div>
+            <figcaption class="w-hero__cap mono" id="wHeroCap"></figcaption>
+          </figure>
+
+          <section class="w-cols">
+            <div>
+              <div class="sec-h"><span class="sec-h__i mono">01</span><h2 class="sec-h__t">剧情简介</h2><span class="sec-h__line"></span></div>
+              <div class="w-body" id="wSynopsis"></div>
+
+              <div class="sec-h" style="margin-top:40px"><span class="sec-h__i mono">02</span><h2 class="sec-h__t">创作手记 / 分镜思路</h2><span class="sec-h__line"></span></div>
+              <div class="w-body" id="wNote"></div>
+
+              <div class="w-empty" id="wAssetHint" style="margin-top:28px"></div>
+            </div>
+
+            <aside>
+              <div class="sec-h"><span class="sec-h__i mono">03</span><h2 class="sec-h__t">作品信息</h2><span class="sec-h__line"></span></div>
+              <dl class="w-facts" id="wFacts"></dl>
+              <div class="w-deliver" id="wDeliver"></div>
+              <div class="w-palette" id="wPalette"></div>
+              <div class="w-links" id="wLinks"></div>
+            </aside>
+          </section>
+
+          <section class="w-gallery">
+            <div class="w-gallery__head">
+              <div class="sec-h" style="margin-bottom:0">
+                <span class="sec-h__i mono">04</span><h2 class="sec-h__t">剧照 / STILLS</h2>
+              </div>
+              <div class="w-gallery__nav">
+                <button type="button" data-gal="prev" aria-label="上一组">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M15 5l-7 7 7 7"/></svg>
+                </button>
+                <button type="button" data-gal="next" aria-label="下一组">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="w-gallery__row no-bar" id="wGalleryRow" data-lenis-prevent></div>
+          </section>
+
+          <section class="w-credits">
+            <div class="sec-h"><span class="sec-h__i mono">05</span><h2 class="sec-h__t">演职员</h2><span class="sec-h__line"></span></div>
+            <div class="credits" id="wCredits"></div>
+          </section>
+
+          <footer class="w-foot">
+            <div class="w-nav">
+              <button class="w-nav__b is-prev" type="button" id="wPrev">
+                <span class="w-nav__k mono" id="wPrevK"></span>
+                <span class="w-nav__t" id="wPrevT"></span>
+              </button>
+              <span class="w-nav__bar" aria-hidden="true"></span>
+              <button class="w-nav__b is-next" type="button" id="wNext">
+                <span class="w-nav__k mono" id="wNextK"></span>
+                <span class="w-nav__t" id="wNextT"></span>
+              </button>
+            </div>
+            <button class="w-top-btn mono" type="button" id="wTop">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20V5M6 11l6-6 6 6"/></svg>
+              回到顶部
+            </button>
+          </footer>
+
+        </div>
+      </div>
+      <div class="wipe" id="wipe" aria-hidden="true"></div>
+    </main>
+
+    <!-- 右侧轮盘 -->
+    <aside class="rail" aria-label="作品轮盘导航">
+
+      <button class="rail__close mono" type="button" id="railClose">关闭 ✕</button>
+
+      <div class="dial" id="dial" tabindex="0" role="slider"
+           aria-label="作品轮盘导航" aria-valuemin="1" aria-valuemax="10" aria-valuenow="1" aria-valuetext="">
+        <svg class="dial__svg" viewBox="0 0 400 400" aria-hidden="true"></svg>
+
+        <div class="dial__sweep" aria-hidden="true"></div>
+
+        <div class="dial__hub">
+          <div class="dial__hub-media" aria-hidden="true"></div>
+          <div class="dial__hub-inner">
+            <div class="dial__num disp"><span>01</span></div>
+            <div class="dial__genre mono">都市奇幻</div>
+            <div class="dial__hub-bar" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="dial__orbit-ring" aria-hidden="true"><div class="dial__orbit-spin"></div></div>
+        <div class="dial__pulse" aria-hidden="true"></div>
+
+        <div class="dial__mark" aria-hidden="true">
+          <div class="dial__mark-glow"></div>
+          <div class="dial__mark-tri"></div>
+          <div class="dial__mark-line"></div>
+          <div class="dial__mark-tick"></div>
+        </div>
+      </div>
+
+      <div class="dial-readout">
+        <div class="dial-readout__top">
+          <span class="dial-readout__idx mono">01 / 10</span>
+          <span class="dial-readout__type mono"></span>
+        </div>
+        <h2 class="dial-readout__title"></h2>
+        <div class="dial-readout__bar" aria-hidden="true"></div>
+        <div class="dial-readout__hint mono">
+          <span class="drag-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+          </span>
+          拖拽轮盘 · 点击确认
+          <kbd>↑</kbd><kbd>↓</kbd>
+        </div>
+      </div>
+
+      <div class="mob-list" aria-label="作品列表"></div>
+    </aside>
+
+    <!-- 底栏 -->
+    <footer class="foot">
+      <span class="foot__hint mono">
+        <span class="drag-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 5l-5 7 5 7M15 5l5 7-5 7"/></svg>
+        </span>
+        <b>拖拽 / 滚轮 / ↑↓</b> 旋转轮盘
+      </span>
+
+      <div class="ticker">
+        <div class="ticker__track" id="tickerTrack"></div>
+      </div>
+
+      <span class="foot__idx">
+        <span class="dots" id="footDots" role="group" aria-label="作品快速跳转"></span>
+        <span class="idx-num disp" id="footIdx">01<sup>/10</sup></span>
+      </span>
+    </footer>
+
+  </div><!-- /shell -->
+
+  <div class="edge-label mono" aria-hidden="true">PORTFOLIO — <span>SELECTED WORKS</span></div>
+
+  <!-- ====================================================== 移动端轮盘入口 -->
+  <button class="rail__fab" type="button" id="railFab" aria-label="打开作品轮盘">
+    <span class="rail__fab-ring">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle class="bg" cx="16" cy="16" r="13" fill="none"/>
+        <circle class="fg" cx="16" cy="16" r="13" fill="none"/>
+      </svg>
+      <span class="rail__fab-n"><span>01</span></span>
+    </span>
+    <span class="rail__fab-t"><b>作品标题</b><span>展开轮盘 / WHEEL</span></span>
+  </button>
+
+  <!-- ====================================================== 悬停预览卡 -->
+  <div class="peek" id="peek" aria-hidden="true">
+    <img class="peek__thumb" alt="">
+    <div class="peek__b">
+      <div class="peek__n mono">01 · 都市奇幻</div>
+      <div class="peek__t">作品标题</div>
+      <div class="peek__d">一句话简介</div>
+      <div class="peek__tags"></div>
+    </div>
+  </div>
+
+  <!-- ====================================================== 列表视图 -->
+  <section class="ov" id="listview" role="dialog" aria-modal="true" aria-label="全部作品" aria-hidden="true">
+    <button class="ov__close mono" type="button" id="lvClose">返回轮盘 <kbd>Esc</kbd></button>
+    <div class="ov__panel no-bar">
+      <div class="ov__head">
+        <div class="ov__kicker mono">INDEX / 全部作品</div>
+        <h2 class="ov__title">十部作品，十条不同的镜头语言</h2>
+        <p class="ov__lead">按题材筛选，或直接点开任意一部。轮盘视图与列表视图共享同一份内容，随时可以互相切换。</p>
+      </div>
+      <div class="lv__filters" id="lvFilters"></div>
+      <div class="lv__grid" id="lvGrid"></div>
+      <div class="lv__filters" style="margin-top:22px;margin-bottom:0">
+        <span class="lv__count mono" id="lvCount"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== 关于 -->
+  <section class="ov" id="about" role="dialog" aria-modal="true" aria-label="关于" aria-hidden="true">
+    <button class="ov__close mono" type="button" id="aboutClose">返回 <kbd>Esc</kbd></button>
+    <div class="ov__panel no-bar">
+      <div class="ov__head">
+        <div class="ov__kicker mono">ABOUT / 关于</div>
+        <h2 class="ov__title">关于这个作品集</h2>
+        <p class="ov__lead" id="aboutLead"></p>
+        <div class="avail" id="aboutAvail">
+          <span class="avail__dot"></span>
+          <span class="avail__t" id="availText"></span>
+        </div>
+      </div>
+
+      <div class="about__stats" id="aboutStats"></div>
+
+      <div class="about__grid">
+        <div>
+          <div class="sec-h about__h"><span class="sec-h__i mono">A</span><h3 class="sec-h__t">能力范围</h3><span class="sec-h__line"></span></div>
+          <ul class="cap-list" id="aboutCaps"></ul>
+
+          <div class="sec-h about__h"><span class="sec-h__i mono">B</span><h3 class="sec-h__t">工作方式</h3><span class="sec-h__line"></span></div>
+          <p class="about__sub">一部作品从剧本到成片的六个阶段。中间三步是我投入最多的地方——分镜决定影片的上限，提示词决定它的下限。</p>
+          <ol class="flow-list" id="aboutFlow"></ol>
+
+          <div class="sec-h about__h"><span class="sec-h__i mono">C</span><h3 class="sec-h__t">作品清单</h3><span class="sec-h__line"></span></div>
+          <div id="aboutWorks"></div>
+
+          <div class="notice">
+            <b>素材说明：</b>主视觉、剧照与视频都按 <code>assets/works/01 … 10/</code> 的固定命名自动加载，
+            缺位的文件会退化为按该片主题色生成的占位视觉 —— 版式与交互不受影响，补齐文件后自动替换。
+            文字内容集中在 <code>js/data.js</code>（logline / synopsis / note / facts / credits）。
+          </div>
+
+          <p class="about__foot mono">
+            <span id="aboutCopy">© 2026 作品集</span>
+            <span>手工构建 · 无模板 · 无外部 CDN 依赖</span>
+          </p>
+        </div>
+
+        <aside>
+          <div class="sec-h about__h"><span class="sec-h__i mono">D</span><h3 class="sec-h__t">联系方式</h3><span class="sec-h__line"></span></div>
+          <div class="contact-grid" id="aboutContact"></div>
+
+          <div class="sec-h about__h"><span class="sec-h__i mono">E</span><h3 class="sec-h__t">工具链</h3><span class="sec-h__line"></span></div>
+          <div class="contact-grid" id="aboutStack"></div>
+
+          <div class="sec-h about__h"><span class="sec-h__i mono">F</span><h3 class="sec-h__t">操作指南</h3><span class="sec-h__line"></span></div>
+          <div class="contact-grid" id="aboutKeys"></div>
+          <button class="keys-open mono" type="button" id="aboutKeysBtn">
+            查看全部快捷键 <kbd>?</kbd>
+          </button>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== 快捷键 -->
+  <section class="ov" id="keys" role="dialog" aria-modal="true" aria-label="快捷键" aria-hidden="true">
+    <button class="ov__close mono" type="button" id="keysClose">返回 <kbd>Esc</kbd></button>
+    <div class="ov__panel no-bar">
+      <div class="ov__head">
+        <div class="ov__kicker mono">SHORTCUTS / 快捷键</div>
+        <h2 class="ov__title">全部操作方式</h2>
+        <p class="ov__lead">键盘、鼠标与触屏都能完整驱动这个轮盘，任意时刻按 <kbd>?</kbd> 回到这里。</p>
+      </div>
+      <div class="about__grid">
+        <div>
+          <div class="sec-h about__h"><span class="sec-h__i mono">A</span><h3 class="sec-h__t">键盘</h3><span class="sec-h__line"></span></div>
+          <div class="cmdk" id="keysKbd"></div>
+        </div>
+        <aside>
+          <div class="sec-h about__h"><span class="sec-h__i mono">B</span><h3 class="sec-h__t">鼠标 / 触屏</h3><span class="sec-h__line"></span></div>
+          <div class="cmdk" id="keysPtr"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== 灯箱 -->
+  <section class="ov" id="lightbox" role="dialog" aria-modal="true" aria-label="剧照查看" aria-hidden="true">
+    <button class="ov__close mono" type="button" id="lbClose">关闭 <kbd>Esc</kbd></button>
+    <div class="lb__thumbs" id="lbThumbs"></div>
+    <div class="lb__stage">
+      <img class="lb__img" id="lbImg" alt="">
+    </div>
+    <div class="lb__bar">
+      <div class="lb__cap" id="lbCap"></div>
+      <div class="lb__counter mono" id="lbCounter">01 / 06</div>
+      <div class="lb__nav">
+        <button type="button" id="lbPrev" aria-label="上一张">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <button type="button" id="lbNext" aria-label="下一张">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== 提示条 -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- 屏幕阅读器播报（作品切换 / 视图变化） -->
+  <div class="sr-only" id="live" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- 复制到剪贴板的兜底容器（navigator.clipboard 不可用时使用） -->
+  <textarea class="sr-only" id="clipFallback" aria-hidden="true" tabindex="-1"></textarea>
+
+  <!-- ====================================================== 自定义光标 -->
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+
+</div><!-- /app -->
+
+<!-- ======================================================== 无脚本降级 -->
+<noscript>
+  <div style="position:fixed;inset:0;z-index:500;overflow:auto;padding:48px;background:#030409;color:#A7B5CD;font-family:'PingFang SC','Microsoft YaHei',sans-serif">
+    <p style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.16em;color:#22E1FF;margin-bottom:10px">PORTFOLIO / NO-JS</p>
+    <h1 style="color:#EFF4FF;font-size:22px;margin-bottom:8px">作品集 · SELECTED WORKS</h1>
+    <p style="font-size:13px;color:#6A7794;margin-bottom:26px">2024 — 2026 · AI 影像 · 分镜设计 · 提示词工程</p>
+    <p style="margin-bottom:24px">本页需要启用 JavaScript 才能使用轮盘交互。以下是全部作品列表：</p>
+    <ol style="line-height:2.1;padding-left:20px">
+      <li>买到等身手办，她夜里觉醒了？（都市奇幻 · 2025）</li>
+      <li>重生拒嫁恶皇子，我转头当上太子妃（古风 · 宫斗重生 · 2025）</li>
+      <li>从现在起，我将暂停世界一分钟（都市悬疑 · 2026）</li>
+      <li>这个邪神可太正了（玄幻 · 反套路 · 2025）</li>
+      <li>末日重启，魔女才是第一生产力（末世 · 科幻 · 2026）</li>
+      <li>斩仙台上何人？灵台方寸山关门弟子（仙侠 · 修真 · 2025）</li>
+      <li>超能映射（科幻 · 悬疑 · 2026）</li>
+      <li>和平精英（电竞 · 竞技 · 2025）</li>
+      <li>古相思曲（古风 · 情感 · 2025）</li>
+      <li>大河密藏（探险 · 悬疑 · 2026）</li>
+    </ol>
+    <p style="margin-top:32px;padding-top:20px;border-top:1px solid #1A2130;font-size:13px;line-height:2">
+      联系方式：GitHub
+      <a href="https://github.com/2317484496-star" style="color:#22E1FF">github.com/2317484496-star</a>
+    </p>
+  </div>
+</noscript>
+
+<!-- ======================================================== 脚本 -->
+<script src="vendor/gsap.min.js" defer></script>
+<script src="vendor/lenis.min.js" defer></script>
+<script src="js/util.js" defer></script>
+<script src="js/data.js" defer></script>
+<script src="js/gl.js" defer></script>
+<script src="js/wheel.js" defer></script>
+<script src="js/stage.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>

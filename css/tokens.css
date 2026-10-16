@@ -1,0 +1,165 @@
+/* ============================================================================
+   tokens.css — 设计令牌 / 重置 / 基础排版
+   调性：暗色赛博科技（Dark Cyber-Tech）
+   ========================================================================= */
+
+:root {
+  /* ---- 基色（近黑，带冷蓝倾向）---- */
+  --bg-void:      #030409;
+  --bg-base:      #06070E;
+  --bg-raise:     #0A0D18;
+  --bg-sunken:    #020306;
+
+  /* ---- 玻璃态 ----
+     backdrop-filter 的代价同时来自模糊半径与被模糊的面积，而这里所有玻璃层
+     的背景都是低频的 WebGL 流场 —— 半径从 18px 降到 11px 在观感上几乎无差，
+     却显著减轻合成器每秒重复采样整块背景的压力。
+     另外去掉了 saturate()：它是独立的一趟色彩运算，而同样的饱和度倾向
+     用底色本身的 alpha 就能表达。 */
+  --glass:        rgba(255, 255, 255, 0.034);
+  --glass-hi:     rgba(255, 255, 255, 0.062);
+  --glass-deep:   rgba(6, 9, 18, 0.72);
+  --blur:         blur(11px);
+  --blur-sm:      blur(7px);
+
+  /* ---- 描边 ---- */
+  --hair:         rgba(255, 255, 255, 0.078);
+  --hair-hi:      rgba(255, 255, 255, 0.16);
+  --hair-lo:      rgba(255, 255, 255, 0.04);
+
+  /* ---- 文本层级 ---- */
+  --ink-1:        #EFF4FF;
+  --ink-2:        #A7B5CD;
+  --ink-3:        #67758E;
+  --ink-4:        #3A4353;
+  --ink-inv:      #04060C;
+
+  /* ---- 动态强调色（由 JS 按作品注入）---- */
+  --acc:          #22E1FF;
+  --acc-2:        #8B5CF6;
+  --acc-rgb:      34, 225, 255;
+  --acc-2-rgb:    139, 92, 246;
+
+  /* ---- 语义色 ---- */
+  --ok:           #6EF7A0;
+  --warn:         #F2A63B;
+  --err:          #FF5A5A;
+
+  /* ---- 字体栈（全系统字体，零外部请求，避免国内字体 CDN 失联）---- */
+  --font-disp: "Bahnschrift", "DIN Alternate", "Oswald", "Segoe UI Variable Display",
+               "HarmonyOS Sans", "PingFang SC", system-ui, -apple-system, sans-serif;
+  --font-cjk:  "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei",
+               "Noto Sans SC", "Source Han Sans SC", "Hiragino Sans GB", sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", "SFMono-Regular", "SF Mono", "JetBrains Mono",
+               "Roboto Mono", Consolas, "Liberation Mono", monospace;
+
+  /* ---- 尺度 ---- */
+  --rail:         424px;   /* 右侧轮盘轨道宽 */
+  --gutter:       48px;
+  --gutter-sm:    22px;
+  --maxw:         1560px;
+
+  /* ---- 动效 ---- */
+  --e-out:        cubic-bezier(0.16, 1, 0.3, 1);
+  --e-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
+  --e-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --e-linear:     linear;
+
+  --z-gl:    0;
+  --z-stage: 10;
+  --z-chrome:40;
+  --z-rail:  60;
+  --z-overlay:80;
+  --z-cursor: 200;
+  --z-pre:   300;
+
+  color-scheme: dark;
+}
+
+/* ============================ 重置 ============================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg-void);
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-cjk);
+  font-size: 15px;
+  line-height: 1.72;
+  color: var(--ink-2);
+  overflow: hidden;               /* 应用为定宽视口，滚动发生在面板内部 */
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
+h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+img, svg, video, canvas { display: block; max-width: 100%; }
+img { height: auto; }
+button, input, select, textarea { font: inherit; color: inherit; background: none; border: 0; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+::selection { background: rgba(var(--acc-rgb), 0.32); color: #fff; }
+
+/* 隐藏滚动条但保留滚动能力（面板内部由 Lenis 接管） */
+.no-bar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-bar::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ============================ 排版工具类 ============================ */
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.mono-sm { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; }
+.disp { font-family: var(--font-disp); font-variant-numeric: tabular-nums; }
+
+.txt-1 { color: var(--ink-1); }
+.txt-2 { color: var(--ink-2); }
+.txt-3 { color: var(--ink-3); }
+.txt-acc { color: var(--acc); }
+
+.hair-t { border-top: 1px solid var(--hair); }
+.balance { text-wrap: balance; }
+.pretty { text-wrap: pretty; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* [hidden] 兜底：作者样式里的 display 会盖过 UA 的 display:none */
+[hidden] { display: none !important; }
+
+/* 键盘可聚焦要素统一焦点环 */
+:focus-visible {
+  outline: 1.5px solid var(--acc);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ============================ 无障碍：降低动效 ============================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
