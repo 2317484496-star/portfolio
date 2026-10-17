@@ -261,15 +261,6 @@ html.is-dev .notice { display: block; }
   padding: 2px 7px;
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
 }
-/* 卡片顶部色带：与作品页「色彩配方」同源 */
-.lv-card__pal {
-  display: flex; height: 4px;
-  margin: 0 -15px 13px;
-  transition: height 0.4s var(--e-out);
-}
-.lv-card__pal i { display: block; height: 100%; box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.1); }
-.lv-card:hover .lv-card__pal { height: 7px; }
-
 .lv-card__b { position: relative; z-index: 2; margin-top: -60px; padding: 0 15px 16px; }.lv-card__t {
   font-size: 15.5px; font-weight: 600; line-height: 1.42; color: #fff;
   margin-bottom: 7px;

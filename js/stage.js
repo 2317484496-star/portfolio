@@ -153,6 +153,27 @@
     if (this.o.onToast) this.o.onToast(msg);
   };
 
+  /* 主视觉的真实状态：素材是否到位，决定播放键与时码角标是否成立。
+     素材还没上传的作品退回静态口径，访客不会看到一个点了没反应的播放键。 */
+  Stage.prototype._syncHeroState = function () {
+    var w = this.o.works[this.index];
+    var f = document.getElementById('wHeroFrame');
+    if (!w || !f) return;
+    var miss = !!U._missing[w.media.hero];
+    var vid = w.type === 'video' || w.type === 'mixed';
+    var ok = !miss && vid;
+    var pb = f.querySelector('#wPlay');
+    f.classList.toggle('is-video', ok);
+    f.classList.toggle('is-still', !ok);
+    if (pb) pb.style.display = ok ? '' : 'none';
+    var tc = document.getElementById('wHeroTc');
+    if (tc) {
+      tc.innerHTML = ok
+        ? '<b>REC</b><span>' + U.esc(w.heroTc) + '</span>'
+        : '<b>STILL</b><span>静态视觉 · 成片待上线</span>';
+    }
+  };
+
   /* -------------------------------------------------------------- 边缘续滚 */
   /* 作品页内滚到顶/底之后继续滚，就切上一部 / 下一部 —— 这是作品集最自然的
      一条动线，缺了它页面会"撞墙"。为避免误触，三重闸门：
@@ -160,32 +181,63 @@
   Stage.prototype.initEdgeNav = function (onNext, onPrev) {
     var self = this;
     var acc = 0, sign = 0, lastT = 0, lock = 0;
-    var THRESH = 200, IDLE = 380, COOLDOWN = 900;
+    var THRESH = 130, IDLE = 450, COOLDOWN = 1100, NEAR = 24;
 
     this.scroller.addEventListener('wheel', function (e) {
       var sc = self.scroller;
+      var now = performance.now();
+
+      /* 刚切完作品的一小段时间里，同一次手势的剩余增量必须被吃掉：
+         否则 Lenis 停摆时浏览器会接管原生滚动，新作品页会被这股余力
+         直接带下去。这里同时掐掉默认滚动和后续监听（含 Lenis 自己的）。 */
+      if (now < (self._edgeLockUntil || 0)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        /* 手还没停就继续续期（滚动式的闸门）：一次连续的滚动手势无论
+           持续多久，都不会把这股余力漏到新作品页上。硬上限兜底，
+           避免用户想接着往下看时被永久锁住。 */
+        if (now < (self._edgeHardUntil || 0)) self._edgeLockUntil = now + 160;
+        return;
+      }
+
       /* 横向为主的手势交给剧照带自己处理 */
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { acc = 0; return; }
       var d = e.deltaY;
       if (!d) return;
 
-      var now = performance.now();
       if (now - lastT > IDLE) { acc = 0; sign = 0; }
       lastT = now;
 
       var s = d > 0 ? 1 : -1;
       if (s !== sign) { acc = 0; sign = s; }
 
-      var atTop = sc.scrollTop <= 1;
-      var atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2;
+      /* 容差放宽到 24px：Lenis 是渐近逼近目标值的，滚动位置很少精确等于
+         上限；触控板的惯性尾段也会差几个像素，卡 2px 会让整条动线失效。 */
+      var atTop = sc.scrollTop <= NEAR;
+      var atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - NEAR;
       if (!(s > 0 ? atBottom : atTop)) { acc = 0; return; }
 
       acc += Math.abs(d);
       if (acc < THRESH || now < lock) return;
       acc = 0;
       lock = now + COOLDOWN;
+
+      /* 切换后先把滚轮闸住一小会儿：否则同一次手势的剩余增量会立刻
+         把新作品页往下带，看起来像「切了但没切到开头」。 */
+      self._edgeLockUntil = now + 760;
+      self._edgeHardUntil = now + 2000;
+      if (self.smooth && typeof self.smooth.stop === 'function') {
+        try { self.smooth.stop(); } catch (err) {}
+        clearTimeout(self._edgeResume);
+        self._edgeResume = setTimeout(function () {
+          try { self.smooth.start(); } catch (err) {}
+          self.scroller.scrollTop = 0;
+          self.scrollTop(false);
+        }, 780);
+      }
+
       if (s > 0) onNext(); else onPrev();
-    }, { capture: true, passive: true });
+    }, { capture: true, passive: false });
   };
 
   /* -------------------------------------------------------------- 滚动控制 */
@@ -267,6 +319,13 @@
     if (idxOf) idxOf.textContent = '/ ' + ('0' + total).slice(-2);
     $('wCat').textContent = w.group;
     $('wYear').textContent = w.year;
+    /* 简历口径的项目角色（主导 / 参与），没有就不占位 */
+    var roleEl = $('wRole'), roleSep = $('wRoleSep');
+    if (roleEl) {
+      roleEl.textContent = w.role || '';
+      roleEl.hidden = !w.role;
+      if (roleSep) roleSep.hidden = !w.role;
+    }
 
     /* 标题（拆字以便动效） */
     var title = $('wTitle');
@@ -279,10 +338,6 @@
 
     /* 标签 */
     $('wTags').innerHTML = w.tags.map(function (t) { return '<span>' + U.esc(t) + '</span>'; }).join('');
-
-    /* 交付形态（按 type 自适应：video / mixed / gallery） */
-    var FM = (WB.SITE && WB.SITE.formMap) || {};
-    var form = FM[w.type] || FM.video || { k: '影像成片', tc: 'REC', items: ['正片'] };
 
     /* 主视觉：按作品原生画幅渲染（竖屏短剧 9:16 / 横屏 16:9），不做统一裁切 */
     var frame = $('wHeroFrame');
@@ -325,11 +380,17 @@
     frame.classList.toggle('is-still', !hasVideo);
     var play = frame.querySelector('#wPlay');
     if (play) play.style.display = hasVideo ? '' : 'none';
+    /* 还没上传成片的作品不该挂着播放键（那条「视频尚未上传」的提示是
+       写给作者看的）。素材一旦缺位，就把这一格退回静态口径。 */
+    this._syncHeroState();
+    clearTimeout(this._heroSyncT);
+    var self0 = this;
+    this._heroSyncT = setTimeout(function () { self0._syncHeroState(); }, 420);
 
-    /* 主视觉角标：视频类显示时码，静态类显示口径说明 */
+    /* 主视觉角标：有成片的显示时码，无成片的说明口径 */
     $('wHeroTc').innerHTML = hasVideo
-      ? '<b>' + U.esc(form.tc) + '</b><span>' + U.esc(w.heroTc) + '</span>'
-      : '<b>' + U.esc(form.tc) + '</b><span>静态设定 · 无成片</span>';
+      ? '<b>REC</b><span>' + U.esc(w.heroTc) + '</span>'
+      : '<b>STILL</b><span>静态设定 · 无成片</span>';
     $('wHeroBadge').textContent = w.typeLabel;
 
     /* 主视觉图注 + 两侧竖排画幅标注 */
@@ -348,39 +409,6 @@
     $('wFacts').innerHTML = w.facts.map(function (f) {
       return '<div><dt class="mono">' + U.esc(f[0]) + '</dt><dd>' + U.esc(f[1]) + '</dd></div>';
     }).join('');
-
-    /* 交付形态区块 */
-    var delEl = $('wDeliver');
-    if (delEl) {
-      delEl.innerHTML =
-        '<div class="w-pal__k mono">交付形态 / DELIVERABLES</div>' +
-        '<div class="w-deliver__k">' + U.esc(form.k) + '</div>' +
-        '<div class="w-deliver__items">' +
-          form.items.map(function (it) { return '<span class="mono">' + U.esc(it) + '</span>'; }).join('') +
-        '</div>';
-    }
-
-    /* 色彩配方 */
-    var palEl = $('wPalette');
-    if (palEl) {
-      var pl = w.palette || { main: '#101A33', sub: w.accent, dot: w.accent2, ratio: '60:30:10' };
-      var parts = String(pl.ratio).split(':').map(function (n) { return parseFloat(n) || 0; });
-      var cols = [pl.main, pl.sub, pl.dot];
-      var names = ['主', '辅', '点缀'];
-      palEl.innerHTML =
-        '<div class="w-pal__k mono">色彩配方 / PALETTE</div>' +
-        '<div class="w-pal__bar" role="img" aria-label="色彩配比 ' + U.esc(pl.ratio) + '">' +
-          cols.map(function (c, i) {
-            return '<i style="background:' + U.esc(c) + ';flex:' + (parts[i] || 1) + '"></i>';
-          }).join('') +
-        '</div>' +
-        '<div class="w-pal__legend">' +
-          cols.map(function (c, i) {
-            return '<span><em style="background:' + U.esc(c) + '"></em>' +
-              U.esc(names[i]) + ' ' + (parts[i] || 0) + '% <b class="mono">' + U.esc(c) + '</b></span>';
-          }).join('') +
-        '</div>';
-    }
 
     /* 外链 */
     $('wLinks').innerHTML = w.links.map(function (l) {
@@ -417,12 +445,6 @@
       });
       el.insertBefore(img, el.firstChild);
     });
-
-    /* 演职员 */
-    $('wCredits').innerHTML = w.credits.map(function (c) {
-      return '<div class="credits__i"><div class="credits__r mono">' + U.esc(c[0]) + '</div>' +
-        '<div class="credits__n">' + U.esc(c[1]) + '</div></div>';
-    }).join('');
 
     /* 上/下一部 */
     var pad2 = function (n) { return ('0' + n).slice(-2); };
@@ -467,7 +489,7 @@
 
     if (!g || U.reduced() || !window.IntersectionObserver) return;
 
-    var els = U.$$('.w-cols > *, .w-gallery, .w-credits, .w-foot', this.inner);
+    var els = U.$$('.w-cols > *, .w-gallery, .w-foot', this.inner);
     if (!els.length) return;
 
     /* 先压暗，避免滚动到位前一闪而过 */

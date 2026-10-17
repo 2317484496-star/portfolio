@@ -361,62 +361,6 @@ video.w-hero__media {
 .w-facts dd { color: var(--ink-1); font-size: 13.5px; line-height: 1.6; }
 .w-facts dd .dim { color: var(--ink-3); }
 
-/* 交付形态 */
-.w-deliver { margin-top: 22px; }
-.w-deliver__k { font-size: 13.5px; color: var(--ink-1); margin-bottom: 9px; }
-.w-deliver__items { display: flex; flex-wrap: wrap; gap: 6px; }
-.w-deliver__items span {
-  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ink-2); padding: 4px 9px;
-  border: 1px solid var(--hair); background: var(--glass);
-}
-.w-deliver__items span::before {
-  content: ''; display: inline-block; vertical-align: middle;
-  width: 4px; height: 4px; margin-right: 6px; border-radius: 50%;
-  background: var(--acc); opacity: 0.85;
-}
-
-/* 色彩配方 */
-.w-palette { margin-top: 22px; }
-.w-pal__k {
-  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--ink-4); margin-bottom: 9px;
-}
-.w-pal__bar {
-  display: flex; height: 34px; width: 100%;
-  border: 1px solid var(--hair); overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-.w-pal__bar i {
-  display: block; height: 100%;
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.11);
-  transition: transform 0.45s var(--e-out), filter 0.45s var(--e-out);
-  transform-origin: bottom center;
-}
-.w-pal__bar:hover i { filter: brightness(1.1); }
-/* 悬停图例 → 高亮对应色带（纯 CSS，无 JS） */
-.w-palette:has(.w-pal__legend span:nth-child(1):hover) .w-pal__bar i:nth-child(1),
-.w-palette:has(.w-pal__legend span:nth-child(2):hover) .w-pal__bar i:nth-child(2),
-.w-palette:has(.w-pal__legend span:nth-child(3):hover) .w-pal__bar i:nth-child(3) {
-  filter: brightness(1.28) saturate(1.15);
-  transform: scaleY(1.16);
-}
-.w-pal__legend {
-  display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px;
-}
-.w-pal__legend span {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 11px; color: var(--ink-3); cursor: default;
-  transition: color 0.3s var(--e-out);
-}
-.w-pal__legend span:hover { color: var(--ink-1); }
-.w-pal__legend em {
-  width: 9px; height: 9px; border-radius: 50%; flex: none;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
-}
-.w-pal__legend b { color: var(--ink-4); font-size: 11px; font-weight: 400; letter-spacing: 0.06em; }
-
 .w-links { display: flex; flex-direction: column; gap: 7px; margin-top: 22px; }
 .w-links a, .w-links button {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -501,19 +445,6 @@ video.w-hero__media {
 }
 .shot:hover .shot__cap { opacity: 1; transform: translateY(0); }
 .shot:hover .shot__n { opacity: 0; }
-
-/* ============================ 演职员 ============================ */
-
-.w-credits { padding: 52px 0 0; }
-.credits { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 1px; background: var(--hair-lo); }
-.credits__i {
-  background: var(--bg-void);
-  padding: 15px 14px;
-  transition: background 0.35s var(--e-out);
-}
-.credits__i:hover { background: var(--glass); }
-.credits__r { color: var(--ink-4); margin-bottom: 4px; }
-.credits__n { color: var(--ink-1); font-size: 13.5px; font-weight: 500; }
 
 /* 空态（素材未到位时的提示） */
 .w-empty {

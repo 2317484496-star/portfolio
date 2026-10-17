@@ -203,9 +203,14 @@
   };
 
   /* 目标值（由外部驱动，内部做阻尼跟随，避免硬切） */
-  GL.prototype.setAccent = function (hex, hex2) {
+  GL.prototype.setAccent = function (hex, hex2, immediate) {
     this.accTarget = U.hex2rgb(hex).map(function (v) { return v / 255; });
     if (hex2) this.acc2Target = U.hex2rgb(hex2).map(function (v) { return v / 255; });
+    /* 首屏 / 深链直接落位：不要从上一部作品的颜色渐变过来 */
+    if (immediate) {
+      this.acc = this.accTarget.slice();
+      if (hex2) this.acc2 = this.acc2Target.slice();
+    }
   };
   GL.prototype.setPointer = function (x, y) { this.ptrTarget[0] = x; this.ptrTarget[1] = y; };
   GL.prototype.pulse = function (v) { this.energyTarget = Math.max(this.energyTarget, v || 1); };

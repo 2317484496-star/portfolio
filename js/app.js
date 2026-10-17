@@ -155,6 +155,10 @@
     var startW = this.works[startIdx] || this.works[0];
 
     U.applyAccent(startW.accent, startW.accent2);
+    /* 深链直接进入某部作品时，背景也要跟着这部走 ——
+       gl 在初始化时按第 1 部设过色，那之后再没被改，会出现
+       「界面是青色、背景还是粉色」的割裂。 */
+    if (this.gl) this.gl.setAccent(startW.accent, startW.accent2, true);
     this.stage.render(startW, startIdx, total, false);
     this.cur = startIdx;
     this.wheel.setIndex(startIdx, true);

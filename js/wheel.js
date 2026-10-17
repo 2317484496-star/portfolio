@@ -241,9 +241,11 @@
       if (ev.button !== undefined && ev.button > 0) return;
       self.dragging = true;
       self.moved = 0;
+      self.pxMoved = 0;
       self.downAt = performance.now();
       self.pointerId = ev.pointerId;
       self.angPrev = angOf(toLocal(ev));
+      self.downP = toLocal(ev);
       self.samples = [{ t: performance.now(), a: self.angPrev }];
       self.vel = 0;
       self.targetIndex = null;
@@ -258,10 +260,18 @@
 
     dial.addEventListener('pointermove', function (ev) {
       if (!self.dragging || ev.pointerId !== self.pointerId) return;
-      var a = angOf(toLocal(ev));
+      var p = toLocal(ev);
+      var a = angOf(p);
       var d = U.angDelta(self.angPrev, a);
       self.rot += d;
       self.moved += Math.abs(d) * 2.2;
+      /* 像素位移单独记一份：半径很小的地方角度变化几乎为 0，
+         用它判断「这是点击还是拖拽」更可靠 */
+      var pb = toLocal(ev);
+      if (self.downP) {
+        self.pxMoved = Math.sqrt((pb.x - self.downP.x) * (pb.x - self.downP.x) +
+          (pb.y - self.downP.y) * (pb.y - self.downP.y));
+      }
       self.angPrev = a;
       var now = performance.now();
       self.samples.push({ t: now, a: a });
@@ -273,6 +283,9 @@
     function endDrag(ev) {
       if (!self.dragging) return;
       if (ev && ev.pointerId !== undefined && ev.pointerId !== self.pointerId) return;
+      var cancelled = ev && ev.type === 'pointercancel';
+      var isTap = !cancelled && self.pxMoved < 10 && (performance.now() - self.downAt) < 700;
+
       self.dragging = false;
       try { dial.releasePointerCapture(self.pointerId); } catch (e) {}
       dial.classList.remove('is-drag');
@@ -287,26 +300,35 @@
         }
       }
       self.samples = [];
+
+      /* 轻点 = 直接切到点中的那一段，不必先拖动再吸附。
+         按「指针相对圆心的角度」反查分段，所以整圈（含序号、发光边、
+         刻度）都是热区，不必精确命中那条几像素宽的弧。 */
+      if (isTap && ev && ev.clientX !== undefined) {
+        var p = toLocal(ev);
+        var dx = p.x - C, dy = p.y - C;
+        var rr = Math.sqrt(dx * dx + dy * dy);
+        if (self.downP) {
+          var ddx = p.x - self.downP.x, ddy = p.y - self.downP.y;
+          if (Math.sqrt(ddx * ddx + ddy * ddy) > 10) isTap = false;
+        }
+        if (isTap) {
+          if (rr < R_IN - 6) {
+            /* 中心盘：确认当前候选项 */
+            self.select(self.nearestIndex(self.rot), true);
+          } else if (rr <= R_OUT + 30) {
+            var local = U.mod(U.deg(Math.atan2(dy, dx)) - self.rot, 360);
+            var idx = Math.floor(local / self.step) % self.n;
+            self.select(idx, true);
+          }
+        }
+      }
     }
     dial.addEventListener('pointerup', endDrag);
     dial.addEventListener('pointercancel', endDrag);
 
-    /* 点击分段 → 立即定位并提交 */
-    dial.addEventListener('click', function (ev) {
-      var seg = ev.target.closest && ev.target.closest('.seg');
-      if (!seg) {
-        if (!self.moved || self.moved <= 7) {
-          /* 点中心盘：跳到候选并提交 */
-          if (ev.target.closest && ev.target.closest('.dial__hub')) {
-            self.select(self.nearestIndex(self.rot), true);
-          }
-        }
-        return;
-      }
-      if (self.moved > 7) return;
-      if (performance.now() - self.downAt > 800) return;
-      self.select(parseInt(seg.getAttribute('data-i'), 10), true);
-    });
+    /* 轻点判定已经放在 endDrag 里（按角度反查分段，整圈都是热区），
+       这里不再单独监听 click —— 否则同一次点击会被提交两次。 */
 
     /* 悬停预览卡 */
     dial.addEventListener('pointerover', function (ev) {

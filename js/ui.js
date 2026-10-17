@@ -174,12 +174,6 @@
       }).join('');
 
       this.grid.innerHTML = works.map(function (w, i) {
-        var pl = w.palette || { main: '#101A33', sub: w.accent, dot: w.accent2, ratio: '60:30:10' };
-        var pp = String(pl.ratio).split(':').map(function (n) { return parseFloat(n) || 1; });
-        var palHtml = [pl.main, pl.sub, pl.dot].map(function (c, k) {
-          return '<i style="background:' + U.esc(c) + ';flex:' + pp[k] + '"></i>';
-        }).join('');
-
         return '<button class="lv-card" type="button" data-i="' + i + '" data-g="' + U.esc(w.group) + '">' +
           '<span class="lv-card__media">' +
             '<img alt="' + U.esc(w.title) + ' 封面" src="' + (w._cover || w.media.cover) + '">' +
@@ -187,7 +181,6 @@
             '<span class="lv-card__type">' + U.esc(w.typeLabel) + '</span>' +
           '</span>' +
           '<span class="lv-card__b">' +
-            '<span class="lv-card__pal" aria-hidden="true">' + palHtml + '</span>' +
             '<span class="lv-card__t">' + U.esc(w.title) + '</span>' +
             '<span class="lv-card__d">' + U.esc(w.logline) + '</span>' +
             '<span class="lv-card__f">' +
@@ -298,8 +291,9 @@
       var o = site.owner;
 
       U.$('#aboutLead').textContent =
-        '这里收录了 ' + works.length + ' 部影像作品的分镜设计、视觉设定与生成过程。' +
-        '每部作品都从一个镜头语言问题开始：这个情绪，用什么样的机位、光位和时长，才能被看见。';
+        '尹航 · ' + (o.role || '执行导演') + '，现就职于' + (o.company || '与光同尘（杭州）文化科技') + '。' +
+        '主导 3 部 AI 漫剧短剧的主要制作，参与 3 部作品的剧本与导演层面的修改优化，作品均上线' +
+        (o.platform || '红果免费漫剧平台') + '。这个站点收录了 ' + works.length + ' 部作品的分镜、视觉设定与成片。';
 
       var availEl = U.$('#availText');
       if (availEl) availEl.textContent = site.openTo || '接受合作邀约';
@@ -308,10 +302,11 @@
         return '<li><b>' + U.esc(c.k) + '</b><div><h4>' + U.esc(c.h) + '</h4><p>' + U.esc(c.p) + '</p></div></li>';
       }).join('');
 
-      /* 工作流程 */
+      /* 工作经历（简历时间线；没有时退回旧的 workflow） */
       var flowEl = U.$('#aboutFlow');
-      if (flowEl && site.workflow) {
-        flowEl.innerHTML = site.workflow.map(function (s) {
+      var flow = site.experience || site.workflow;
+      if (flowEl && flow) {
+        flowEl.innerHTML = flow.map(function (s) {
           return '<li><span class="flow-list__k mono">' + U.esc(s.k) + '</span>' +
             '<div><h4>' + U.esc(s.h) + '</h4><p>' + U.esc(s.p) + '</p></div></li>';
         }).join('');
@@ -329,7 +324,7 @@
       var akEl = U.$('#aboutKeys');
       if (akEl) {
         akEl.innerHTML = [
-          { k: '轮盘', v: '拖拽 / 滚轮 / ↑↓' },
+          { k: '轮盘', v: '点击 / 拖拽 / 滚轮 / ↑↓' },
           { k: '直达', v: '数字键 1 – 0' },
           { k: '列表视图', v: 'L' },
           { k: '全屏', v: 'F' },
@@ -343,8 +338,11 @@
       U.$('#aboutContact').innerHTML =
         row('姓名 / NAME', o.name) +
         row('身份 / ROLE', o.role) +
+        row('公司 / COMPANY', o.company) +
         row('城市 / CITY', o.city) +
+        row('电话 / TEL', o.phone) +
         row('邮箱 / EMAIL', o.email) +
+        row('学校 / SCHOOL', o.school) +
         '<a href="' + U.esc(o.github) + '" target="_blank" rel="noopener"><span>GitHub</span><span>' +
           U.esc(o.github.replace('https://', '')) + ' ' + ICO.out + '</span></a>';
 
@@ -356,7 +354,7 @@
           ' aria-label="跳转到作品 ' + U.esc(w.n) + '：' + U.esc(w.title) + '">' +
           '<span class="about__w-i mono">' + U.esc(w.n) + '</span>' +
           '<span class="about__w-t">' + U.esc(w.title) + '</span>' +
-          '<span class="about__w-g mono">' + U.esc(w.group) + ' · ' + U.esc(w.year) + '</span>' +
+          '<span class="about__w-g mono">' + U.esc(w.group) + ' · ' + U.esc(w.role || w.year) + '</span>' +
           '<span class="about__w-go">' + ICO.arr + '</span></button>';
       }).join('');
 
@@ -378,11 +376,11 @@
          对外只需要呈现「有多少、什么门类、什么形态、什么年份跨度」。 */
       var statsEl = U.$('#aboutStats');
       if (statsEl) {
-        var groups = {}, types = {}, accs = {};
+        var groups = {}, lead = 0, join = 0;
         works.forEach(function (w) {
           if (w.group) groups[w.group] = 1;
-          if (w.type) types[w.type] = 1;
-          if (w.accent) accs[w.accent] = 1;
+          if (w.role && w.role.indexOf('主导') > -1) lead++;
+          else if (w.role && w.role.indexOf('参与') > -1) join++;
         });
         var ys = works.map(function (w) { return parseInt(w.year, 10); }).filter(function (n) { return !isNaN(n); });
         var yMin = ys.length ? Math.min.apply(null, ys) : null;
@@ -390,9 +388,9 @@
         var span = (yMin && yMax) ? (yMin === yMax ? String(yMin) : yMin + '–' + yMax) : (site.years || '—');
         var cells = [
           { k: '收录作品', v: works.length, s: 'WORKS' },
+          { k: '主导制作', v: lead, s: 'LEAD' },
+          { k: '参与作品', v: join, s: 'JOINED' },
           { k: '题材门类', v: Object.keys(groups).length, s: 'GENRES' },
-          { k: '交付形态', v: Object.keys(types).length, s: 'FORMATS' },
-          { k: '独立配色', v: Object.keys(accs).length, s: 'PALETTES' },
           { k: '年份跨度', v: span, s: 'SPAN', wide: true }
         ];
         statsEl.innerHTML = cells.map(function (c) {

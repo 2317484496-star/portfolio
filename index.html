@@ -138,6 +138,7 @@
               <span class="w-eyebrow__cat mono" id="wCat">都市奇幻</span>
               <span class="w-eyebrow__meta mono">
                 <span id="wYear">2025</span>
+                <i id="wRoleSep"></i><span id="wRole"></span>
               </span>
               <button class="w-copy mono" type="button" id="wCopy" title="复制这一部的链接（快捷键 C）">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="11" height="11" aria-hidden="true"><path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.6 1.6"/><path d="M14 10.5a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.6-1.6"/></svg>
@@ -186,8 +187,6 @@
             <aside>
               <div class="sec-h"><span class="sec-h__i mono">03</span><h2 class="sec-h__t">作品信息</h2><span class="sec-h__line"></span></div>
               <dl class="w-facts" id="wFacts"></dl>
-              <div class="w-deliver" id="wDeliver"></div>
-              <div class="w-palette" id="wPalette"></div>
               <div class="w-links" id="wLinks"></div>
             </aside>
           </section>
@@ -207,11 +206,6 @@
               </div>
             </div>
             <div class="w-gallery__row no-bar" id="wGalleryRow" data-lenis-prevent></div>
-          </section>
-
-          <section class="w-credits">
-            <div class="sec-h"><span class="sec-h__i mono">05</span><h2 class="sec-h__t">演职员</h2><span class="sec-h__line"></span></div>
-            <div class="credits" id="wCredits"></div>
           </section>
 
           <footer class="w-foot">
@@ -356,7 +350,7 @@
     <div class="ov__panel no-bar">
       <div class="ov__head">
         <div class="ov__kicker mono">ABOUT / 关于</div>
-        <h2 class="ov__title">关于这个作品集</h2>
+        <h2 class="ov__title">关于我</h2>
         <p class="ov__lead" id="aboutLead"></p>
         <div class="avail" id="aboutAvail">
           <span class="avail__dot"></span>
@@ -368,11 +362,11 @@
 
       <div class="about__grid">
         <div>
-          <div class="sec-h about__h"><span class="sec-h__i mono">A</span><h3 class="sec-h__t">能力范围</h3><span class="sec-h__line"></span></div>
+          <div class="sec-h about__h"><span class="sec-h__i mono">A</span><h3 class="sec-h__t">个人优势</h3><span class="sec-h__line"></span></div>
           <ul class="cap-list" id="aboutCaps"></ul>
 
-          <div class="sec-h about__h"><span class="sec-h__i mono">B</span><h3 class="sec-h__t">工作方式</h3><span class="sec-h__line"></span></div>
-          <p class="about__sub">一部作品从剧本到成片的六个阶段。中间三步是我投入最多的地方——分镜决定影片的上限，提示词决定它的下限。</p>
+          <div class="sec-h about__h"><span class="sec-h__i mono">B</span><h3 class="sec-h__t">工作经历</h3><span class="sec-h__line"></span></div>
+          <p class="about__sub">从 3D 建模、剪辑，到项目组长与执行导演。现在的工作是统筹 AI 漫剧短剧的内容制作与排期，并对镜头节奏、画面风格与成片效果做整体把控。</p>
           <ol class="flow-list" id="aboutFlow"></ol>
 
           <div class="sec-h about__h"><span class="sec-h__i mono">C</span><h3 class="sec-h__t">作品清单</h3><span class="sec-h__line"></span></div>
@@ -381,11 +375,11 @@
           <div class="notice">
             <b>素材说明：</b>主视觉、剧照与视频都按 <code>assets/works/01 … 10/</code> 的固定命名自动加载，
             缺位的文件会退化为按该片主题色生成的占位视觉 —— 版式与交互不受影响，补齐文件后自动替换。
-            文字内容集中在 <code>js/data.js</code>（logline / synopsis / note / facts / credits）。
+            文字内容集中在 <code>js/data.js</code>（logline / synopsis / note / facts）。
           </div>
 
           <p class="about__foot mono">
-            <span id="aboutCopy">© 2026 作品集</span>
+            <span id="aboutCopy">© 2026 尹航</span>
             <span>手工构建 · 无模板 · 无外部 CDN 依赖</span>
           </p>
         </div>

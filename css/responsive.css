@@ -153,7 +153,6 @@
   .w-gallery { padding: 40px 0; }
   .shot { width: min(76vw, 292px); }
   .shot--tall { width: min(52vw, 200px); }
-  .credits { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   .w-foot { padding-top: 40px; }
   .w-next__t { font-size: 17px; }
   .stage__rail { display: none; }
