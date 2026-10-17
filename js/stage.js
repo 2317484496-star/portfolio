@@ -20,7 +20,10 @@
     cube: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2.6 21 7.4v9.2L12 21.4 3 16.6V7.4z"/><path d="M3 7.4l9 4.8 9-4.8M12 12.2v9.2"/></svg>',
     img: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="1.5"/><circle cx="8.6" cy="9.4" r="1.6"/><path d="M3 17l5-4.4 4 3.2 3.4-2.6L21 17"/></svg>',
     film: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg>',
-    spark: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M17.7 6.3l-2.8 2.8M9.1 14.9l-2.8 2.8"/></svg>'
+    spark: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M17.7 6.3l-2.8 2.8M9.1 14.9l-2.8 2.8"/></svg>',
+    pause: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24"><path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.4z" fill="currentColor"/></svg>',
+    vol: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4z"/><path d="M15.6 9a4.2 4.2 0 0 1 0 6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>',
+    muted: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4z"/><path d="M16 9.5l4.6 5M20.6 9.5l-4.6 5"/></svg>'
   };
 
   function typeIco(t) {
@@ -52,7 +55,7 @@
       var onMq = function () { self.syncSmooth(); };
       if (mq.addEventListener) mq.addEventListener('change', onMq);
       else if (mq.addListener) mq.addListener(onMq);
-      window.addEventListener('resize', function () { self.syncSmooth(); });
+      window.addEventListener('resize', function () { self.syncSmooth(); self.fitHero(); });
     }
   }
 
@@ -96,11 +99,31 @@
       if (pv && self.o.onPrev) { self.o.onPrev(); return; }
     });
 
+    /* 悬停主视觉时就把成片取回来：点播放基本是瞬间起播，
+       也避免用户先看到「载入 3%」再等。 */
+    var heroFrame = this.$('wHeroFrame');
+    if (heroFrame) {
+      heroFrame.addEventListener('pointerenter', function () {
+        var w = self.current;
+        if (!w) return;
+        if (w.type !== 'video' && w.type !== 'mixed') return;
+        if (location.protocol === 'file:') return;
+        if (U._missing[w.media.video]) return;
+        self._loadVideo(w);
+      });
+    }
+
     /* 视频播放：懒加载 */
     this._onScroll = null;
   };
 
   /* ---------------------------------------------------------------- 播放 */
+  function vFmt(t) {
+    if (!isFinite(t) || t < 0) t = 0;
+    var m = Math.floor(t / 60), s = Math.floor(t % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
   Stage.prototype._play = function () {
     var frame = this.$('wHeroFrame');
     var w = this.current;
@@ -115,9 +138,9 @@
     var self = this;
     var v = document.createElement('video');
     v.className = 'w-hero__media';
-    v.controls = true;
+    /* 原生控件在深色画面上又小又难拖，换成自绘控制条 */
+    v.controls = false;
     v.playsInline = true;
-    /* 20 秒的片段播完停在最后一帧会「死」在画面上，循环才是作品集该有的表现 */
     v.loop = true;
     v.preload = 'metadata';
     v.poster = w.media.poster;
@@ -125,7 +148,9 @@
 
     function bail(msg) {
       v.remove();
-      frame.classList.remove('is-video');
+      var bar = frame.querySelector('.vctl');
+      if (bar) bar.remove();
+      frame.classList.remove('is-video', 'is-playing', 'is-idle', 'is-portrait', 'is-landscape');
       var btn = frame.querySelector('#wPlay');
       if (btn) btn.style.display = '';
       self._toast(msg);
@@ -140,13 +165,215 @@
     var play = frame.querySelector('#wPlay');
     if (play) play.style.display = 'none';
 
-    var p = v.play();
-    if (p && p.catch) {
-      p.catch(function () {
-        /* 仅有自动播放被拦截：保留原生控件让用户手动播，不算失败 */
-        setTimeout(function () { if (v.readyState === 0 && v.networkState === 3) bail('视频文件尚未上传 —— 把成片放到 ' + w.dir + '/video.mp4 即可自动播放'); }, 900);
-      });
+    var bar = this._videoBar(v, frame);
+
+    function start(src) {
+      if (!frame.contains(v)) return;   /* 已经切到别的作品 */
+      v.src = src;
+      v.load();
+      bar.ready();
+      var pr = v.play();
+      if (pr && pr.catch) pr.catch(function () { /* 自动播放被拦截，控件可用 */ });
     }
+
+    /* 托管环境（含本站的静态托管）普遍不实现 Range 请求，浏览器会把
+       `seekable` 锁成 [0,0]，进度条怎么拖都不会动。整段取回成 Blob 后
+       播放，资源是"完整的"，跳转就一定可用。 */
+    if (location.protocol === 'file:' || !window.fetch || !window.Blob) {
+      start(w.media.video);
+      return;
+    }
+
+    bar.loading(0);
+    this._loadVideo(w, function (p) { bar.loading(p); })
+      .then(start)
+      .catch(function () {
+        /* 取不回来就退回流式播放：不能拖，但至少能看 */
+        bar.ready();
+        start(w.media.video);
+      });
+  };
+
+  /* 整段取回视频并缓存成 objectURL（最多留两份，别把十个成片堆在内存里）。
+     同一部作品的并发请求会复用同一个 Promise。 */
+  Stage.prototype._loadVideo = function (w, onProgress) {
+    var self = this;
+    var key = w.n;
+    if (!this._vbuf) this._vbuf = {};
+    if (!this._vpending) this._vpending = {};
+    if (this._vbuf[key]) return Promise.resolve(this._vbuf[key]);
+    if (this._vpending[key]) return this._vpending[key];
+    if (U._missing[w.media.video]) return Promise.reject(new Error('missing'));
+
+    var p = fetch(w.media.video)
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        var total = +(r.headers.get('content-length') || 0);
+        if (!r.body || !r.body.getReader) return r.blob();
+        var reader = r.body.getReader();
+        var chunks = [], got = 0;
+        function pump() {
+          return reader.read().then(function (res) {
+            if (res.done) return new Blob(chunks, { type: 'video/mp4' });
+            chunks.push(res.value);
+            got += res.value.length;
+            if (onProgress) onProgress(total ? got / total : 0);
+            return pump();
+          });
+        }
+        return pump();
+      })
+      .then(function (blob) {
+        var url = URL.createObjectURL(blob);
+        self._vbuf[key] = url;
+        var keys = Object.keys(self._vbuf);
+        while (keys.length > 2) {
+          var k = keys.shift();
+          if (k === key) continue;
+          try { URL.revokeObjectURL(self._vbuf[k]); } catch (e) {}
+          delete self._vbuf[k];
+        }
+        delete self._vpending[key];
+        return url;
+      })
+      .catch(function (e) {
+        delete self._vpending[key];
+        U._missing[w.media.video] = 1;
+        throw e;
+      });
+
+    this._vpending[key] = p;
+    return p;
+  };
+
+  /* 自绘控制条：播放 / 进度拖动 / 时间 / 静音 / 全屏。
+     顺带在元数据就绪后把画框比例改成素材的真实比例。 */
+  Stage.prototype._videoBar = function (v, frame) {
+    var self = this;
+    var old = frame.querySelector('.vctl');
+    if (old) old.remove();
+
+    var bar = document.createElement('div');
+    bar.className = 'vctl';
+    bar.innerHTML =
+      '<button class="vctl__b" type="button" data-act="toggle" aria-label="暂停">' + ICO.pause + '</button>' +
+      '<span class="vctl__t" data-cur>00:00</span>' +
+      '<input class="vctl__seek" type="range" min="0" max="1000" step="1" value="0" aria-label="播放进度，可左右拖动">' +
+      '<span class="vctl__t" data-dur>00:00</span>' +
+      '<button class="vctl__b" type="button" data-act="mute" aria-label="静音">' + ICO.vol + '</button>' +
+      '<button class="vctl__b" type="button" data-act="fs" aria-label="全屏观看">' + ICO.expand + '</button>';
+    frame.appendChild(bar);
+
+    var seek = bar.querySelector('.vctl__seek');
+    var cur = bar.querySelector('[data-cur]');
+    var durEl = bar.querySelector('[data-dur]');
+    var toggle = bar.querySelector('[data-act="toggle"]');
+    var muteBtn = bar.querySelector('[data-act="mute"]');
+    var fsBtn = bar.querySelector('[data-act="fs"]');
+    var dragging = false;
+
+    function paint() {
+      var p = v.duration ? v.currentTime / v.duration : 0;
+      seek.value = String(Math.round(p * 1000));
+      seek.style.setProperty('--p', (p * 100).toFixed(2) + '%');
+      cur.textContent = vFmt(v.currentTime);
+    }
+
+    /* 画框跟着素材真实比例走：16:9 的作品配 9:16 成片时，画框收成竖幅，
+       而不是把画面塞进比例不对的框里、上下留一大条黑边。 */
+    function syncAspect() {
+      var vw = v.videoWidth, vh = v.videoHeight;
+      if (!vw || !vh) return;
+      frame.style.setProperty('--ar', vw + ' / ' + vh);
+      var fig = self.$('wHeroFig');
+      if (fig) {
+        fig.style.setProperty('--arw', String(vw));
+        fig.style.setProperty('--arh', String(vh));
+      }
+      frame.classList.toggle('is-portrait', vw < vh);
+      frame.classList.toggle('is-landscape', vw >= vh);
+      requestAnimationFrame(function () { self.fitHero(); });
+    }
+
+    v.addEventListener('loadedmetadata', function () {
+      syncAspect();
+      durEl.textContent = vFmt(v.duration);
+      paint();
+    });
+    v.addEventListener('durationchange', function () { durEl.textContent = vFmt(v.duration); });
+    v.addEventListener('timeupdate', function () { if (!dragging) paint(); });
+
+    v.addEventListener('play', function () {
+      frame.classList.add('is-playing');
+      toggle.innerHTML = ICO.pause;
+      toggle.setAttribute('aria-label', '暂停');
+    });
+    v.addEventListener('pause', function () {
+      frame.classList.remove('is-playing');
+      toggle.innerHTML = ICO.play;
+      toggle.setAttribute('aria-label', '播放');
+      frame.classList.remove('is-idle');
+    });
+
+    toggle.addEventListener('click', function () {
+      if (v.paused) v.play(); else v.pause();
+    });
+
+    seek.addEventListener('pointerdown', function () { dragging = true; });
+    window.addEventListener('pointerup', function () { dragging = false; });
+    seek.addEventListener('input', function () {
+      var p = +seek.value / 1000;
+      if (isFinite(v.duration)) v.currentTime = v.duration * p;
+      seek.style.setProperty('--p', (p * 100).toFixed(2) + '%');
+      cur.textContent = vFmt(v.currentTime);
+    });
+    seek.addEventListener('change', function () { dragging = false; });
+
+    muteBtn.addEventListener('click', function () {
+      v.muted = !v.muted;
+      muteBtn.classList.toggle('is-off', v.muted);
+      muteBtn.innerHTML = v.muted ? ICO.muted : ICO.vol;
+      muteBtn.setAttribute('aria-label', v.muted ? '取消静音' : '静音');
+    });
+
+    fsBtn.addEventListener('click', function () {
+      var d = document;
+      if (d.fullscreenElement || d.webkitFullscreenElement) {
+        (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d);
+      } else if (v.requestFullscreen) {
+        v.requestFullscreen().catch(function () {});
+      } else if (v.webkitEnterFullscreen) {
+        v.webkitEnterFullscreen();
+      }
+    });
+
+    /* 播放中 2.4s 不动鼠标就把控制条收起来，别一直压在画面上 */
+    var idle;
+    function wake() {
+      frame.classList.remove('is-idle');
+      clearTimeout(idle);
+      idle = setTimeout(function () {
+        if (!v.paused) frame.classList.add('is-idle');
+      }, 2400);
+    }
+    frame.addEventListener('pointermove', wake);
+    wake();
+    this._videoWake = wake;
+
+    return {
+      loading: function (p) {
+        bar.classList.add('is-loading');
+        seek.disabled = true;
+        seek.style.setProperty('--p', (Math.max(0, Math.min(1, p)) * 100).toFixed(1) + '%');
+        cur.textContent = p > 0 ? Math.round(p * 100) + '%' : '载入';
+      },
+      ready: function () {
+        bar.classList.remove('is-loading');
+        seek.disabled = false;
+        durEl.textContent = vFmt(v.duration);
+        paint();
+      }
+    };
   };
 
   Stage.prototype._toast = function (msg) {
@@ -174,70 +401,27 @@
     }
   };
 
-  /* -------------------------------------------------------------- 边缘续滚 */
-  /* 作品页内滚到顶/底之后继续滚，就切上一部 / 下一部 —— 这是作品集最自然的
-     一条动线，缺了它页面会"撞墙"。为避免误触，三重闸门：
-     ① 方向必须连续；② 累计滚动量过阈值；③ 触发后有一段冷却。 */
-  Stage.prototype.initEdgeNav = function (onNext, onPrev) {
-    var self = this;
-    var acc = 0, sign = 0, lastT = 0, lock = 0;
-    var THRESH = 130, IDLE = 450, COOLDOWN = 1100, NEAR = 24;
-
-    this.scroller.addEventListener('wheel', function (e) {
-      var sc = self.scroller;
-      var now = performance.now();
-
-      /* 刚切完作品的一小段时间里，同一次手势的剩余增量必须被吃掉：
-         否则 Lenis 停摆时浏览器会接管原生滚动，新作品页会被这股余力
-         直接带下去。这里同时掐掉默认滚动和后续监听（含 Lenis 自己的）。 */
-      if (now < (self._edgeLockUntil || 0)) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        /* 手还没停就继续续期（滚动式的闸门）：一次连续的滚动手势无论
-           持续多久，都不会把这股余力漏到新作品页上。硬上限兜底，
-           避免用户想接着往下看时被永久锁住。 */
-        if (now < (self._edgeHardUntil || 0)) self._edgeLockUntil = now + 160;
-        return;
-      }
-
-      /* 横向为主的手势交给剧照带自己处理 */
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { acc = 0; return; }
-      var d = e.deltaY;
-      if (!d) return;
-
-      if (now - lastT > IDLE) { acc = 0; sign = 0; }
-      lastT = now;
-
-      var s = d > 0 ? 1 : -1;
-      if (s !== sign) { acc = 0; sign = s; }
-
-      /* 容差放宽到 24px：Lenis 是渐近逼近目标值的，滚动位置很少精确等于
-         上限；触控板的惯性尾段也会差几个像素，卡 2px 会让整条动线失效。 */
-      var atTop = sc.scrollTop <= NEAR;
-      var atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - NEAR;
-      if (!(s > 0 ? atBottom : atTop)) { acc = 0; return; }
-
-      acc += Math.abs(d);
-      if (acc < THRESH || now < lock) return;
-      acc = 0;
-      lock = now + COOLDOWN;
-
-      /* 切换后先把滚轮闸住一小会儿：否则同一次手势的剩余增量会立刻
-         把新作品页往下带，看起来像「切了但没切到开头」。 */
-      self._edgeLockUntil = now + 760;
-      self._edgeHardUntil = now + 2000;
-      if (self.smooth && typeof self.smooth.stop === 'function') {
-        try { self.smooth.stop(); } catch (err) {}
-        clearTimeout(self._edgeResume);
-        self._edgeResume = setTimeout(function () {
-          try { self.smooth.start(); } catch (err) {}
-          self.scroller.scrollTop = 0;
-          self.scrollTop(false);
-        }, 780);
-      }
-
-      if (s > 0) onNext(); else onPrev();
-    }, { capture: true, passive: false });
+  /* 按「实际可用高度」算主视觉的画框高度。
+     只用 CSS 的 100vh 断点调不准：标题换行、图注高度都会变，
+     结果要么画面被页面底边切掉，要么白白空出一条。 */
+  Stage.prototype.fitHero = function () {
+    var fig = this.$('wHeroFig');
+    var sc = this.scroller;
+    if (!fig || !sc) return;
+    if (fig.classList.contains('is-portrait')) {
+      fig.style.removeProperty('--hero-h');
+      return;
+    }
+    var cs = getComputedStyle(fig);
+    var arw = parseFloat(cs.getPropertyValue('--arw')) || 16;
+    var arh = parseFloat(cs.getPropertyValue('--arh')) || 9;
+    var top = fig.getBoundingClientRect().top - sc.getBoundingClientRect().top;
+    var side = parseFloat(cs.getPropertyValue('--side-w')) || 60;
+    /* 46px 留给图注，24px 是底边呼吸 */
+    var byH = sc.clientHeight - top - 46 - 24;
+    var byW = (fig.clientWidth - side * 2 - 8) * arh / arw;
+    var h = Math.max(240, Math.min(byH, byW, 920));
+    fig.style.setProperty('--hero-h', Math.round(h) + 'px');
   };
 
   /* -------------------------------------------------------------- 滚动控制 */
@@ -361,6 +545,9 @@
 
     var oldVid = frame.querySelector('video');
     if (oldVid) oldVid.remove();
+    var oldBar = frame.querySelector('.vctl');
+    if (oldBar) oldBar.remove();
+    frame.classList.remove('is-playing', 'is-idle');
     var media = frame.querySelector('img.w-hero__media');
     if (!media) {
       media = document.createElement('img');
@@ -456,6 +643,10 @@
     $('wNextT').innerHTML = '<span>' + U.esc(nextW.title) + '</span>';
     $('wPrevK').textContent = '上一部 / PREV · ' + prevW.n;
     $('wPrevT').innerHTML = '<span>' + U.esc(prevW.title) + '</span>';
+
+    /* 画框高度依赖真实排版结果，等这一帧排完再量 */
+    var selfFit = this;
+    requestAnimationFrame(function () { selfFit.fitHero(); });
 
     /* 素材缺失提示：只在「开发态 + 主视觉确实没上传」时出现。
        这条是写给站点作者的施工信息，访客不该看到，所以线上永远隐藏。 */

@@ -117,8 +117,8 @@
       onScroll: function (p) { self.gl && self.gl.setScroll(p * 0.6); }
     });
     document.getElementById('stageInner').style.opacity = '0';
-    /* 滚到作品页尽头再继续滚 → 切下一部（顶部反向 → 上一部） */
-    this.stage.initEdgeNav(function () { self.step(1); }, function () { self.step(-1); });
+    /* 明确不接管滚轮：滚动只用来读作品页，不再兼作切作品的入口。
+       切作品只保留点击 / 拖拽 / 键盘 / 底栏分页点。 */
 
     /* 轮盘 */
     this.wheel = new WB.Wheel(document.querySelector('.rail'), this.works, {

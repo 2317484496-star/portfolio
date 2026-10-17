@@ -350,18 +350,8 @@
       if (self.opts.onHoverEnd) self.opts.onHoverEnd();
     });
 
-    /* 滚轮：整条右侧轨道都有效（桌面端），鼠标在轮盘附近不必精确命中也能旋转 */
-    this.root.addEventListener('wheel', function (ev) {
-      /* 轨道自身可滚动时（移动端抽屉、低矮视口）让位给原生滚动 */
-      if (self.root.scrollHeight > self.root.clientHeight + 2) return;
-      var d = ev.deltaY;
-      if (ev.deltaMode === 1) d *= 18;
-      else if (ev.deltaMode === 2) d *= 320;
-      self.targetIndex = null;
-      self._cancelCommit();
-      self.vel += U.clamp(d * 0.07, -300, 300);
-      ev.preventDefault();
-    }, { passive: false });
+    /* 滚轮不再驱动轮盘：页面滚动与「切作品」是两件事，
+       混在一起时只是把鼠标移过右侧就会误切。切换只走点击 / 拖拽 / 键盘。 */
 
     /* 键盘 */
     dial.addEventListener('keydown', function (ev) {

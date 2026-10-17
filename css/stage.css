@@ -26,7 +26,12 @@
   /* 关闭原生平滑，交给 Lenis 统一驱动，避免两套缓动互相打架 */
   scroll-behavior: auto;
 }
-.stage__inner { position: relative; max-width: 1080px; }
+.stage__inner { position: relative; max-width: 1080px; margin-inline: auto; }
+/* 宽屏不要把内容锁在 1080 —— 1920 下会空出近一半横向空间。
+   分档放宽，并同步抬高主视觉的高度配额。 */
+@media (min-width: 1440px) { .stage__inner { max-width: 1200px; } }
+@media (min-width: 1700px) { .stage__inner { max-width: 1360px; } }
+@media (min-width: 2100px) { .stage__inner { max-width: 1520px; } }
 
 /* 竖屏作品的首页版式：标题块与竖幅海报并置在首屏，正文自第二屏开始。 */
 @media (min-width: 1081px) {
@@ -103,11 +108,11 @@
 
 /* ============================ 作品标题块 ============================ */
 
-.w-head { position: relative; padding-bottom: 34px; }
+.w-head { position: relative; padding-bottom: 24px; }
 
 .w-eyebrow {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 .w-eyebrow__idx {
   font-family: var(--font-disp); font-size: 12px; font-weight: 600;
@@ -186,19 +191,23 @@
    9:16 与 16:9 共用同一套骨架，只有 --hero-h 的取值不同。 */
 .w-hero {
   --side-w: 60px;      /* 两侧竖排画幅标注的列宽 */
-  --side-gap: 28px;    /* 标注与画框之间的左右各 14px 留白 */
-  --hero-h: clamp(250px, calc(100vh - 570px), 500px);
+  /* 高度配额：画框高度上限。宽度由画幅反推，画框本身吃满可用宽度，
+     这样宽屏下画面会跟着长大，而不是永远卡在 500px。 */
+  --hero-h: clamp(280px, calc(100vh - 470px), 560px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--side-w) auto var(--side-w) minmax(0, 1fr);
+  grid-template-columns: var(--side-w) minmax(0, 1fr) var(--side-w);
   grid-template-areas:
-    '.   sl  frame sr  .  '
-    'cap cap cap   cap cap';
+    'sl  frame sr '
+    'cap cap   cap';
   align-items: center;
-  /* 显式宽度：不依赖内在尺寸推导，避免图注长文本把 auto 轨道撑开 */
-  width: calc(var(--side-w) * 2 + var(--side-gap) + var(--hero-h) * var(--arw, 16) / var(--arh, 9));
+  width: 100%;
   max-width: 100%;
   margin: 4px auto 54px;
+  transition: max-width 0.4s var(--e-out);
 }
+@media (min-width: 1440px) { .w-hero { --hero-h: clamp(320px, calc(100vh - 455px), 680px); } }
+@media (min-width: 1700px) { .w-hero { --hero-h: clamp(340px, calc(100vh - 440px), 800px); } }
+@media (min-width: 2100px) { .w-hero { --hero-h: clamp(380px, calc(100vh - 430px), 900px); } }
 /* 竖屏：首屏改成「左标题 / 右竖幅海报」并置，海报可以占满一屏高度。
    高度配额同时受视口高度与可用宽度约束 —— 宽度那一项保证左侧标题列不被挤没。 */
 .w-hero.is-portrait {
@@ -226,16 +235,18 @@
 
 .w-hero__frame {
   grid-area: frame;
+  justify-self: center;
   position: relative;
-  /* 高度定值 → 宽度按原生画幅反推；未拿到数值时退回 aspect-ratio */
-  height: var(--hero-h);
-  width: calc(var(--hero-h) * var(--arw, 16) / var(--arh, 9));
-  max-width: 100%;
+  /* 宽度吃满轨道，但不超过「高度配额 × 画幅」；高度交给 aspect-ratio。
+     视频载入后会把 --arw/--arh 改成素材真实比例，画框随之贴合。 */
+  width: 100%;
+  max-width: calc(var(--hero-h) * var(--arw, 16) / var(--arh, 9));
   aspect-ratio: var(--ar, 16 / 9);
   border: 1px solid var(--hair);
   background: #05070E;
   overflow: hidden;
   isolation: isolate;
+  transition: max-width 0.45s var(--e-out), aspect-ratio 0.45s var(--e-out);
 }
 .w-hero__frame::before {
   content: ""; position: absolute; inset: -40%; z-index: 0;
@@ -262,6 +273,8 @@ video.w-hero__media {
      用 cover 会把画面上下裁掉，成片必须完整呈现，所以视频一律用 contain。 */
   object-fit: contain;
   background: #05070E;
+  /* 视频不做悬停推近：控制条是独立图层，缩放会让画面与控件错位 */
+  transform: none !important;
 }
 .w-hero__frame.is-video:hover video.w-hero__media { filter: none; }
 
@@ -514,4 +527,97 @@ video.w-hero__media {
     rgba(var(--acc-rgb), 0.5) 50%, rgba(var(--acc-rgb), 0.13) 66%, transparent 100%);
   transform: translateX(-101%) skewX(-8deg);
   opacity: 0;
+}
+
+
+/* ============================ 视频控制条 ============================ */
+/* 原生控件在深色画面上又小又难点，且各浏览器样式不一；这里自绘一条，
+   进度条是原生 range（可拖、可键盘），外面只负责视觉。 */
+.vctl {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
+  display: flex; align-items: center; gap: 10px;
+  padding: 30px 14px 10px;
+  background: linear-gradient(0deg, rgba(3,5,11,0.94), rgba(3,5,11,0.55) 58%, transparent);
+  opacity: 1;
+  transition: opacity 0.35s var(--e-out), transform 0.35s var(--e-out);
+}
+.w-hero__frame.is-idle .vctl { opacity: 0; transform: translateY(6px); pointer-events: none; }
+.vctl.is-loading .vctl__seek { cursor: progress; opacity: 0.75; }
+.vctl.is-loading .vctl__b { opacity: 0.4; pointer-events: none; }
+
+.vctl__b {
+  appearance: none; -webkit-appearance: none;
+  border: 0; background: transparent; padding: 0;
+  width: 26px; height: 26px; flex: none;
+  display: grid; place-items: center;
+  color: var(--ink-2); cursor: pointer;
+  transition: color 0.3s var(--e-out), background 0.3s var(--e-out);
+}
+.vctl__b svg { width: 15px; height: 15px; }
+.vctl__b:hover { color: var(--acc); }
+.vctl__b.is-off { color: var(--acc); }
+
+.vctl__t {
+  font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2); min-width: 36px; text-align: center;
+  flex: none;
+}
+
+.vctl__seek {
+  appearance: none; -webkit-appearance: none;
+  flex: 1 1 auto; min-width: 60px;
+  height: 20px; margin: 0;
+  background: transparent; cursor: pointer;
+  --p: 0%;
+}
+.vctl__seek::-webkit-slider-runnable-track {
+  height: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--acc) var(--p, 0%), rgba(255,255,255,0.22) var(--p, 0%));
+}
+.vctl__seek::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 11px; height: 11px; margin-top: -4px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(var(--acc-rgb), 0.4);
+  transition: transform 0.2s var(--e-out);
+}
+.vctl__seek:hover::-webkit-slider-thumb { transform: scale(1.2); }
+.vctl__seek::-moz-range-track {
+  height: 3px; border-radius: 2px; background: rgba(255,255,255,0.22);
+}
+.vctl__seek::-moz-range-progress {
+  height: 3px; border-radius: 2px; background: var(--acc);
+}
+.vctl__seek::-moz-range-thumb {
+  width: 11px; height: 11px; border: 0; border-radius: 50%; background: #fff;
+}
+.vctl__seek:focus-visible { outline: none; }
+.vctl__seek:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(var(--acc-rgb), 0.65);
+}
+
+/* 竖幅画框（9:16）里控制条要更窄，别把时间挤没 */
+.w-hero__frame.is-portrait .vctl { gap: 6px; padding-left: 8px; padding-right: 8px; }
+.w-hero__frame.is-portrait .vctl__t { min-width: 30px; font-size: 10.5px; }
+
+@media (max-width: 520px) {
+  .vctl { gap: 7px; padding: 24px 10px 8px; }
+  .vctl__t { min-width: 30px; font-size: 10.5px; }
+  .vctl__b { width: 24px; height: 24px; }
+}
+
+/* 超大屏：标题跟着放大，否则 52px 在 2560 上会显得像正文。
+   必须放在 .w-title 之后 —— 同权重规则按出现顺序覆盖。 */
+@media (min-width: 1700px) {
+  .w-title { font-size: clamp(40px, 3vw, 64px); }
+  .w-logline { font-size: 17px; max-width: 66ch; }
+}
+
+/* 超大屏：标题跟着放大，否则 52px 在 2560 上会显得像正文。
+   必须放在 .w-title 之后 —— 同权重规则按出现顺序覆盖。 */
+@media (min-width: 1700px) {
+  .w-title { font-size: clamp(40px, 3vw, 64px); }
+  .w-logline { font-size: 17px; max-width: 66ch; }
 }
