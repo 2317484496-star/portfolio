@@ -117,6 +117,8 @@
     v.className = 'w-hero__media';
     v.controls = true;
     v.playsInline = true;
+    /* 20 秒的片段播完停在最后一帧会「死」在画面上，循环才是作品集该有的表现 */
+    v.loop = true;
     v.preload = 'metadata';
     v.poster = w.media.poster;
     v.src = w.media.video;

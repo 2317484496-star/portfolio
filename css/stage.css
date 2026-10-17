@@ -252,6 +252,12 @@
 .w-hero__frame.is-video .w-hero__media { filter: brightness(0.62); }
 .w-hero__frame.is-video:hover .w-hero__media { filter: brightness(0.72); }
 
+/* 视频与主视觉图共用 .w-hero__media，初始同为 z-index:1；
+   而视频是插在 frame 最前面的，DOM 顺序上落后于图片 ——
+   不同层级就一定会被图片盖住，点了播放却只看到静帧。 */
+video.w-hero__media { z-index: 2; filter: none; }
+.w-hero__frame.is-video:hover video.w-hero__media { filter: none; }
+
 /* 扫描光带 */
 .w-hero__scan {
   position: absolute; left: 0; right: 0; height: 28%; z-index: 2;
