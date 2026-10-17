@@ -22,16 +22,22 @@
 
   /* 并置版式留给大屏：窄屏回归「标题在上 / 画框通栏」的单列阅读流 */
   .stage__inner.is-portrait > .w-head { padding-bottom: 34px; }
-  .w-hero {
+  /* 窄屏回归单列：画框通栏。必须同时覆盖 .w-hero.is-portrait ——
+     它带着更高的权重，只改 .w-hero 会被它按回「高度 320 → 宽度 180」。 */
+  .w-hero,
+  .w-hero.is-portrait {
     display: block;
     --hero-h: auto;
     width: 100%;
     margin: 4px 0 44px;
   }
   .w-hero__side { display: none; }
-  .w-hero__frame {
+  .w-hero__frame,
+  .w-hero__frame.is-portrait,
+  .w-hero__frame.is-landscape {
     height: auto;
     width: 100%;
+    max-width: 100%;
   }
 }
 

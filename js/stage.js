@@ -357,6 +357,13 @@
       }, 2400);
     }
     frame.addEventListener('pointermove', wake);
+    /* 触屏没有 hover：点画面唤出控制条，再点画面才是播放/暂停 */
+    frame.addEventListener('pointerdown', function (ev) {
+      wake();
+      if (ev.pointerType === 'mouse') return;
+      if (ev.target.closest && ev.target.closest('.vctl')) return;
+      if (v.paused) v.play(); else v.pause();
+    });
     wake();
     this._videoWake = wake;
 
