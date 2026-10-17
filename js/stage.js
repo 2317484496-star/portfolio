@@ -604,14 +604,15 @@
       return '<div><dt class="mono">' + U.esc(f[0]) + '</dt><dd>' + U.esc(f[1]) + '</dd></div>';
     }).join('');
 
-    /* 外链 */
-    $('wLinks').innerHTML = w.links.map(function (l) {
-      var off = l.off || !l.href;
-      var tag = off ? 'button' : 'a';
-      var attr = off ? 'type="button"' : 'href="' + U.esc(l.href) + '" target="_blank" rel="noopener"';
-      return '<' + tag + ' ' + attr + ' class="' + (off ? 'is-off' : '') + '">' +
-        '<span>' + U.esc(l.label) + (off ? ' · 待补' : '') + '</span>' + ICO.out + '</' + tag + '>';
+    /* 外链：只渲染有真实地址的。没配地址的直接不出现 ——
+       以前会渲染成「平台正片 · 待补」的灰色按钮，等于把施工状态摆给访客看。 */
+    var live = (w.links || []).filter(function (l) { return l && l.href && !l.off; });
+    var linksEl = $('wLinks');
+    linksEl.innerHTML = live.map(function (l) {
+      return '<a href="' + U.esc(l.href) + '" target="_blank" rel="noopener">' +
+        '<span>' + U.esc(l.label) + '</span>' + ICO.out + '</a>';
     }).join('');
+    linksEl.hidden = !live.length;
 
     /* 图集 */
     $('wGalleryRow').innerHTML = w.media.stills.map(function (s, i) {

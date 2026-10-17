@@ -175,20 +175,6 @@
 
 /* 素材说明是「怎么写这个站点」的规范，只说给作者听：
    线上隐藏，本地 / file:// / ?dev 打开时才出现（判定见 U.DEV） */
-.notice {
-  display: none;
-  margin-top: 34px;
-  padding: 16px 18px;
-  border: 1px dashed var(--hair);
-  background: rgba(var(--acc-rgb), 0.04);
-  font-size: 13px; line-height: 1.8; color: var(--ink-3);
-}
-html.is-dev .notice { display: block; }
-.notice b { color: var(--ink-1); }
-.notice code {
-  font-family: var(--font-mono); font-size: 11px; color: var(--acc);
-  background: rgba(var(--acc-rgb), 0.09); padding: 1px 5px;
-}
 
 /* ============================ 列表视图 ============================ */
 

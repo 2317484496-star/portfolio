@@ -328,8 +328,7 @@
           { k: '直达', v: '数字键 1 – 0' },
           { k: '列表视图', v: 'L' },
           { k: '全屏', v: 'F' },
-          { k: '复制链接', v: 'C' },
-          { k: '深链', v: '地址栏 #作品名 可分享' }
+          { k: '复制链接', v: 'C' }
         ].map(function (r) {
           return '<div><span>' + U.esc(r.k) + '</span><span>' + U.esc(r.v) + '</span></div>';
         }).join('');
