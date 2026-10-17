@@ -601,6 +601,10 @@ video.w-hero__media {
 /* 竖幅画框（9:16）里控制条要更窄，别把时间挤没 */
 .w-hero__frame.is-portrait .vctl { gap: 6px; padding-left: 8px; padding-right: 8px; }
 .w-hero__frame.is-portrait .vctl__t { min-width: 30px; font-size: 10.5px; }
+/* 竖幅画框只有 240px 宽时，把总时长让给进度条，当前时间足够用了 */
+.w-hero__frame.is-portrait .vctl__t[data-dur] { display: none; }
+/* 竖幅画框只有 240px 宽时，把总时长让给进度条，当前时间足够用了 */
+.w-hero__frame.is-portrait .vctl__t[data-dur] { display: none; }
 
 @media (max-width: 520px) {
   .vctl { gap: 7px; padding: 24px 10px 8px; }
