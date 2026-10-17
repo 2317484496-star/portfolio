@@ -27,11 +27,14 @@
   --hair-hi:      rgba(255, 255, 255, 0.16);
   --hair-lo:      rgba(255, 255, 255, 0.04);
 
-  /* ---- 文本层级 ---- */
-  --ink-1:        #EFF4FF;
-  --ink-2:        #A7B5CD;
-  --ink-3:        #67758E;
-  --ink-4:        #3A4353;
+  /* ---- 文本层级 ----
+     原来 ink-3(#67758E) / ink-4(#3A4353) 在近黑底上的对比度只有 3.3:1 与 2:1，
+     配上 9–10px 的小字与很宽的 letter-spacing，实际观感是「糊成一片」。
+     这里整体提亮两档，同时保留层级差（1 > 2 > 3 > 4）。 */
+  --ink-1:        #F3F7FF;
+  --ink-2:        #C2CDE0;
+  --ink-3:        #9AA8BE;
+  --ink-4:        #75829A;
   --ink-inv:      #04060C;
 
   /* ---- 动态强调色（由 JS 按作品注入）---- */
@@ -120,13 +123,16 @@ a { color: inherit; text-decoration: none; }
 
 .mono {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
-.mono-sm { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; }
+.mono-sm {
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; font-weight: 500;
+}
 .disp { font-family: var(--font-disp); font-variant-numeric: tabular-nums; }
 
 .txt-1 { color: var(--ink-1); }

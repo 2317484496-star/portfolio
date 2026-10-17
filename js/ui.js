@@ -373,13 +373,16 @@
       this._listEl = listEl;
       this._works = works;
 
-      /* ---- 统计块：由数据实时推导，替换 data.js 后自动更新 ---- */
+      /* ---- 统计块：由数据实时推导，替换 data.js 后自动更新 ----
+         刻意不统计「已完成 / 推进中」这类进度状态：作品集里那属于内部信息，
+         对外只需要呈现「有多少、什么门类、什么形态、什么年份跨度」。 */
       var statsEl = U.$('#aboutStats');
       if (statsEl) {
-        var done = 0, groups = {};
+        var groups = {}, types = {}, accs = {};
         works.forEach(function (w) {
-          if (w.status === '已完成') done++;
           if (w.group) groups[w.group] = 1;
+          if (w.type) types[w.type] = 1;
+          if (w.accent) accs[w.accent] = 1;
         });
         var ys = works.map(function (w) { return parseInt(w.year, 10); }).filter(function (n) { return !isNaN(n); });
         var yMin = ys.length ? Math.min.apply(null, ys) : null;
@@ -387,9 +390,9 @@
         var span = (yMin && yMax) ? (yMin === yMax ? String(yMin) : yMin + '–' + yMax) : (site.years || '—');
         var cells = [
           { k: '收录作品', v: works.length, s: 'WORKS' },
-          { k: '已完成', v: done, s: 'SHIPPED' },
-          { k: '推进中', v: works.length - done, s: 'IN PROGRESS' },
           { k: '题材门类', v: Object.keys(groups).length, s: 'GENRES' },
+          { k: '交付形态', v: Object.keys(types).length, s: 'FORMATS' },
+          { k: '独立配色', v: Object.keys(accs).length, s: 'PALETTES' },
           { k: '年份跨度', v: span, s: 'SPAN', wide: true }
         ];
         statsEl.innerHTML = cells.map(function (c) {

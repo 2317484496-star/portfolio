@@ -36,12 +36,12 @@
   background: var(--glass);
   backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
   color: var(--ink-2);
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
   transition: all 0.35s var(--e-out);
 }
 .ov__close:hover { color: var(--acc); border-color: rgba(var(--acc-rgb), 0.6); background: rgba(var(--acc-rgb), 0.08); }
 .ov__close kbd {
-  font-family: var(--font-mono); font-size: 9px; padding: 1px 4px;
+  font-family: var(--font-mono); font-size: 10.5px; padding: 1px 4px;
   border: 1px solid var(--hair-hi); color: var(--ink-3);
 }
 
@@ -110,7 +110,7 @@
 .about__stat.is-wide .about__stat-v { font-size: 26px; letter-spacing: 0; }
 .about__stat-k { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
 .about__stat-s {
-  font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--ink-4);
 }
 
@@ -170,7 +170,7 @@
   transition: background 0.35s var(--e-out), padding-left 0.35s var(--e-out);
 }
 .contact-grid a:hover { background: var(--glass); padding-left: 22px; }
-.contact-grid span:first-child { color: var(--ink-4); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
+.contact-grid span:first-child { color: var(--ink-4); font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase; }
 .contact-grid span:last-child { color: var(--ink-1); font-size: 13.5px; }
 
 /* 素材说明是「怎么写这个站点」的规范，只说给作者听：
@@ -201,7 +201,7 @@ html.is-dev .notice { display: block; }
   border: 1px solid var(--hair);
   background: var(--glass);
   color: var(--ink-3);
-  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
   transition: all 0.32s var(--e-out);
 }
 .lv__filters button:hover { color: var(--ink-1); border-color: var(--hair-hi); }
@@ -254,7 +254,7 @@ html.is-dev .notice { display: block; }
 }
 .lv-card__type {
   position: absolute; right: 13px; top: 12px; z-index: 2;
-  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
   color: rgba(255,255,255,0.8);
   border: 1px solid rgba(255,255,255,0.24);
   background: rgba(4,6,12,0.5);
@@ -283,7 +283,7 @@ html.is-dev .notice { display: block; }
 .lv-card__f { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .lv-card__tags { display: flex; gap: 5px; flex-wrap: wrap; }
 .lv-card__tags span {
-  font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--ink-3); border: 1px solid var(--hair); padding: 1.5px 5px;
 }
 .lv-card__go { color: var(--ink-4); transition: color 0.35s var(--e-out), transform 0.4s var(--e-out); }
@@ -381,11 +381,11 @@ html.is-dev .notice { display: block; }
 .cmdk__k::before { content: none; }
 .cmdk__h { font-size: 13px; line-height: 1.6; color: var(--ink-2); }
 .cmdk__w {
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em;
   color: var(--ink-3); padding: 2px 0;
 }
 .cmdk kbd {
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.04em;
   color: var(--ink-1); text-align: center; min-width: 22px;
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid var(--hair-hi); border-bottom-width: 2px; border-radius: 3px;
@@ -399,7 +399,7 @@ html.is-dev .notice { display: block; }
   padding: 11px 14px;
   border: 1px solid var(--hair); background: var(--glass);
   color: var(--ink-2);
-  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase;
   transition: color 0.35s var(--e-out), border-color 0.35s var(--e-out),
               background 0.35s var(--e-out), transform 0.35s var(--e-out);
 }
@@ -408,7 +408,7 @@ html.is-dev .notice { display: block; }
   background: rgba(var(--acc-rgb), 0.07); transform: translateY(-2px);
 }
 .keys-open kbd {
-  font-family: var(--font-mono); font-size: 10px;
+  font-family: var(--font-mono); font-size: 11.5px;
   border: 1px solid var(--hair-hi); border-radius: 3px; padding: 0 5px;
   color: var(--acc);
 }

@@ -117,7 +117,7 @@
   padding: 3px 9px 4px;
   box-shadow: 0 0 20px rgba(var(--acc-rgb), 0.45);
 }
-.w-eyebrow__of { font-size: 10px; letter-spacing: 0.12em; color: var(--ink-4); }
+.w-eyebrow__of { font-size: 11.5px; letter-spacing: 0.12em; color: var(--ink-4); }
 .w-eyebrow__cat { color: var(--acc); }
 .w-eyebrow__sep { width: 22px; height: 1px; background: var(--hair-hi); }
 .w-eyebrow__meta { color: var(--ink-3); display: inline-flex; align-items: center; gap: 10px; }
@@ -130,7 +130,7 @@
   padding: 4px 10px;
   border: 1px solid var(--hair);
   color: var(--ink-4);
-  font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
   transition: color 0.3s var(--e-out), border-color 0.3s var(--e-out), background 0.3s var(--e-out);
 }
 .w-copy svg { flex: none; }
@@ -171,7 +171,7 @@
 
 .w-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 22px; }
 .w-tags span {
-  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
   padding: 4px 9px;
   border: 1px solid var(--hair);
   color: var(--ink-3);
@@ -215,7 +215,7 @@
 .w-hero__side {
   display: flex; align-items: center; justify-content: center;
   writing-mode: vertical-rl;
-  font-size: 10px; letter-spacing: 0.42em; text-transform: uppercase;
+  font-size: 11.5px; letter-spacing: 0.42em; text-transform: uppercase;
   color: var(--ink-3);
   align-self: stretch;
 }
@@ -255,7 +255,14 @@
 /* 视频与主视觉图共用 .w-hero__media，初始同为 z-index:1；
    而视频是插在 frame 最前面的，DOM 顺序上落后于图片 ——
    不同层级就一定会被图片盖住，点了播放却只看到静帧。 */
-video.w-hero__media { z-index: 2; filter: none; }
+video.w-hero__media {
+  z-index: 2;
+  filter: none;
+  /* 成片的画幅不一定和作品主视觉一致（例如 16:9 的作品配 9:16 的竖版成片）。
+     用 cover 会把画面上下裁掉，成片必须完整呈现，所以视频一律用 contain。 */
+  object-fit: contain;
+  background: #05070E;
+}
 .w-hero__frame.is-video:hover video.w-hero__media { filter: none; }
 
 /* 扫描光带 */
@@ -359,7 +366,7 @@ video.w-hero__media { z-index: 2; filter: none; }
 .w-deliver__k { font-size: 13.5px; color: var(--ink-1); margin-bottom: 9px; }
 .w-deliver__items { display: flex; flex-wrap: wrap; gap: 6px; }
 .w-deliver__items span {
-  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--ink-2); padding: 4px 9px;
   border: 1px solid var(--hair); background: var(--glass);
 }
@@ -372,7 +379,7 @@ video.w-hero__media { z-index: 2; filter: none; }
 /* 色彩配方 */
 .w-palette { margin-top: 22px; }
 .w-pal__k {
-  font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--ink-4); margin-bottom: 9px;
 }
 .w-pal__bar {
@@ -408,7 +415,7 @@ video.w-hero__media { z-index: 2; filter: none; }
   width: 9px; height: 9px; border-radius: 50%; flex: none;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
-.w-pal__legend b { color: var(--ink-4); font-size: 9.5px; font-weight: 400; letter-spacing: 0.06em; }
+.w-pal__legend b { color: var(--ink-4); font-size: 11px; font-weight: 400; letter-spacing: 0.06em; }
 
 .w-links { display: flex; flex-direction: column; gap: 7px; margin-top: 22px; }
 .w-links a, .w-links button {
@@ -417,7 +424,7 @@ video.w-hero__media { z-index: 2; filter: none; }
   border: 1px solid var(--hair);
   background: var(--glass);
   color: var(--ink-2);
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase;
   transition: color 0.35s var(--e-out), border-color 0.35s var(--e-out), background 0.35s var(--e-out), transform 0.35s var(--e-out);
 }
 .w-links a:hover, .w-links button:hover {

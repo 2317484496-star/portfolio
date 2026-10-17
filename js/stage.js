@@ -267,8 +267,6 @@
     if (idxOf) idxOf.textContent = '/ ' + ('0' + total).slice(-2);
     $('wCat').textContent = w.group;
     $('wYear').textContent = w.year;
-    $('wStatus').textContent = w.status;
-    $('wStatus').classList.toggle('is-live', w.status !== '已完结' && w.status !== '已完成');
 
     /* 标题（拆字以便动效） */
     var title = $('wTitle');
