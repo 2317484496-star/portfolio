@@ -37,7 +37,7 @@
 | 04 | `assets/works/04` | 这个邪神可太正了 |
 | 05 | `assets/works/05` | 末日重启，魔女才是第一生产力 |
 | 06 | `assets/works/06` | 斩仙台上何人？灵台方寸山关门弟子 |
-| 07 | `assets/works/07` | 超能映射 |
+| 07 | `assets/works/07` | 我在怪异世界搞解剖直播 |
 | 08 | `assets/works/08` | 和平精英 |
 | 09 | `assets/works/09` | 古相思曲 |
 | 10 | `assets/works/10` | 大河密藏 |
