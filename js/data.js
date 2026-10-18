@@ -59,27 +59,27 @@
     /* 关于面板 · 工作经历（简历时间线，倒序） */
     experience: [
       {
-        k: '2025.12 — 2026.10',
+        k: '2025.12—2026.10',
         h: '与光同尘（杭州）文化科技 · 项目组长 / 执行导演（已离职）',
         p: '统筹 AI 漫剧短剧的内容制作与项目排期；主导 3 部作品的主要制作，参与 3 部作品的制作及剧本、导演层面的修改优化；作品均上线红果免费漫剧平台。担任执行导演，负责镜头节奏、画面风格与成片效果的整体把控。'
       },
       {
-        k: '2025.02 — 2025.06',
+        k: '2025.02—2025.06',
         h: '东东电竞俱乐部 · 游戏宣传 / 主播',
         p: '负责直播俱乐部的人员资质考核，并对俱乐部人员的技术实力进行录制剪辑，扩大俱乐部影响力。'
       },
       {
-        k: '2024.03 — 2024.05',
+        k: '2024.03—2024.05',
         h: '西安点晴科技 · 建模实习生',
         p: '承担人物手部雕刻及运动手套制作，协助原画团队进行效果设定，保证项目整体风格统一协调。'
       },
       {
-        k: '2023.04 — 2025.03',
+        k: '2023.04—2025.03',
         h: '视频剪辑与 AI 协作',
         p: '掌握 PR、AE、剪映等剪辑工具，可运用 AI 生成视频与素材，具备多类型视频制作及宣传能力。'
       },
       {
-        k: '2021.09 — 2023.04',
+        k: '2021.09—2023.04',
         h: '3D 建模培训 · 陕西科技大学',
         p: '系统学习 MAYA、ZBrush 等建模软件与 3D 建模原理，独立完成多个游戏人物及产品模型制作。'
       }
@@ -174,6 +174,7 @@
       type: 'video',
       typeLabel: '竖屏短剧',
       role: '执行导演 · 主导制作',
+      scope: 'lead',
       accent: '#FF3D8B',
       accent2: '#8B5CF6',
       heroCap: '小八 · 魅魔女仆至尊典藏版 / 铭牌 No.08',
@@ -217,6 +218,7 @@
       type: 'video',
       typeLabel: '古风短剧',
       role: '执行导演 · 主导制作',
+      scope: 'lead',
       accent: '#F5C542',
       accent2: '#E0503A',
       heroCap: '谢清微 · 大婚 / 红盖与金冠',
@@ -262,6 +264,7 @@
       type: 'video',
       typeLabel: '废土短剧',
       role: '执行导演 · 主导制作',
+      scope: 'lead',
       accent: '#22D3EE',
       accent2: '#6D8BFF',
       heroCap: '时间停摆的那一分钟 / KEY ART',
@@ -302,6 +305,7 @@
       type: 'video',
       typeLabel: '异世界短剧',
       role: '参与制作 · 剧本与导演优化',
+      scope: 'join',
       accent: '#8B5CF6',
       accent2: '#FF6B9D',
       heroCap: '猩红神国 · 神格碎片的落点 / KEY ART',
@@ -344,6 +348,7 @@
       type: 'video',
       typeLabel: '动态漫短剧',
       role: '参与制作 · 剧本与导演优化',
+      scope: 'join',
       accent: '#E44BFF',
       accent2: '#6EF7A0',
       heroCap: '魔女小队 / KEY ART',
@@ -385,6 +390,7 @@
       type: 'video',
       typeLabel: '仙侠短剧',
       role: '参与制作',
+      scope: 'join',
       accent: '#10D9A8',
       accent2: '#4FD1FF',
       heroCap: '陆凡 · 斩仙台前',
@@ -428,6 +434,8 @@
       year: '2026',
       type: 'video',
       typeLabel: '末世短剧',
+      role: '参与制作 · 分镜设计与提示词工程',
+      scope: 'join',
       /* 取自小队概念图：冷蓝底 + 青绿器件光，沙金作为环境高光 */
       accent: '#9BE04B',
       accent2: '#F0A24A',
@@ -469,6 +477,8 @@
       year: '2025',
       type: 'mixed',
       typeLabel: '竖屏漫剧 + 角色设定',
+      role: '参与制作 · 分镜设计与角色设定',
+      scope: 'join',
       accent: '#FF6A1A',
       accent2: '#38D6FF',
       heroCap: '时小爱 · 落地',
@@ -513,6 +523,7 @@
       type: 'video',
       typeLabel: '古风短剧',
       role: '参与项目 · PV / 部分剧集',
+      scope: 'part',
       accent: '#C0392B',
       accent2: '#E9C27A',
       heroCap: '黑鸦与红绸 / KEY ART',
@@ -554,6 +565,7 @@
       type: 'video',
       typeLabel: '悬疑短剧',
       role: '参与项目 · PV / 部分剧集',
+      scope: 'part',
       accent: '#3B82F6',
       accent2: '#F2A63B',
       heroCap: '弥家祠堂 · 那一夜的火 / KEY ART',
@@ -595,6 +607,7 @@
       type: 'gallery',
       typeLabel: '美术前期 · 概念图',
       role: '参与项目 · 美术前期策划',
+      scope: 'part',
       accent: '#D7F0FF',
       accent2: '#FFE3B0',
       heroCap: '海底珠光 · 龙首破水 / KEY ART',
@@ -629,6 +642,14 @@
     })
 
   ];
+
+  /* 参与程度：三档。页面上的徽标、长度条、列表角标都按这个口径渲染，
+     不再靠 role 字符串里有没有「主导」两个字去猜。 */
+  WB.SCOPE = {
+    lead: { zh: '主导制作', en: 'LEAD', short: '主导', n: 3 },
+    join: { zh: '参与制作', en: 'CO-OP', short: '参与', n: 2 },
+    part: { zh: '部分参与', en: 'PARTIAL', short: '部分', n: 1 }
+  };
 
   /* 供筛选使用的分类集合 */
   WB.GROUPS = ['全部'].concat(

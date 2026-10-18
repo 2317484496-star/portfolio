@@ -148,7 +148,7 @@
 .flow-list { display: grid; gap: 1px; background: var(--hair-lo); }
 .flow-list li {
   background: var(--bg-void); padding: 16px 16px 16px 18px;
-  display: grid; grid-template-columns: 46px 1fr; gap: 12px;
+  display: grid; grid-template-columns: 96px 1fr; gap: 12px;
   position: relative; transition: background 0.35s var(--e-out);
 }
 .flow-list li::before {
@@ -159,7 +159,7 @@
 }
 .flow-list li:hover { background: rgba(var(--acc-rgb), 0.045); }
 .flow-list li:hover::before { transform: scaleY(1); }
-.flow-list__k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--acc); padding-top: 2px; }
+.flow-list__k { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--acc); padding-top: 2px; white-space: nowrap; }
 .flow-list h4 { font-size: 13.5px; font-weight: 600; color: var(--ink-1); margin-bottom: 4px; }
 .flow-list p { font-size: 12.5px; line-height: 1.72; color: var(--ink-3); }
 
@@ -238,6 +238,28 @@
   font-family: var(--font-disp); font-size: 11px; letter-spacing: 0.14em;
   color: var(--ink-inv); background: var(--acc); padding: 2px 7px;
 }
+/* 参与程度角标：封面左下角，压在最暗那条渐变上 */
+.lv-card__scope {
+  position: absolute; left: 13px; bottom: 12px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em;
+  padding: 3px 8px;
+  color: var(--ink-inv); background: var(--acc);
+  font-weight: 700;
+}
+.lv-card__scope::before {
+  content: ''; width: 4px; height: 4px; border-radius: 50%; background: currentColor;
+}
+.lv-card__scope[data-scope="join"] {
+  background: rgba(var(--acc-rgb), 0.16); color: var(--acc);
+  border: 1px solid rgba(var(--acc-rgb), 0.55); font-weight: 600;
+}
+.lv-card__scope[data-scope="part"] {
+  background: rgba(4, 6, 12, 0.66); color: var(--ink-2);
+  border: 1px solid var(--hair-hi); font-weight: 500;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+
 .lv-card__type {
   position: absolute; right: 13px; top: 12px; z-index: 2;
   font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -330,7 +352,17 @@
 .about__w:focus-visible { outline: 1px solid var(--acc); outline-offset: 2px; }
 .about__w-i { color: var(--acc); }
 .about__w-t { color: var(--ink-1); font-size: 13.5px; line-height: 1.45; }
-.about__w-g { color: var(--ink-4); white-space: nowrap; }
+.about__w-g { color: var(--ink-4); white-space: nowrap; display: inline-flex; align-items: center; gap: 10px; }
+/* 作品清单里的参与程度小标 */
+.about__w-s {
+  font-style: normal; font-size: 10px; letter-spacing: 0.1em; font-weight: 500;
+  padding: 2px 7px; white-space: nowrap;
+  color: var(--acc); border: 1px solid rgba(var(--acc-rgb), 0.5);
+  background: rgba(var(--acc-rgb), 0.1);
+}
+.about__w-s[data-scope="part"] {
+  color: var(--ink-3); border-color: var(--hair-hi); background: transparent;
+}
 .about__w-go {
   width: 0; overflow: hidden; opacity: 0;
   color: var(--acc); align-self: center;

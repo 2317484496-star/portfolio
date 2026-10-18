@@ -152,6 +152,46 @@
   margin-bottom: 24px;
 }
 
+/* ---- 参与程度徽标 ----
+   放在标题正下方，三档长度条 + 具体分工。访客第一眼要判断的是
+   「这片子他出了多少力」，所以它比标签、比简介都更靠前。 */
+.w-scope {
+  display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 10px;
+  margin: -6px 0 22px;
+  padding: 8px 14px 8px 13px;
+  position: relative;
+  border: 1px solid rgba(var(--acc-rgb), 0.36);
+  background: linear-gradient(100deg, rgba(var(--acc-rgb), 0.17), rgba(var(--acc-rgb), 0.02) 66%);
+  color: var(--acc);
+  transition: color 0.4s var(--e-out), border-color 0.4s var(--e-out), background 0.4s var(--e-out);
+}
+.w-scope::before {
+  content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px;
+  background: var(--acc);
+}
+.w-scope__v { font-size: 13.5px; font-weight: 600; letter-spacing: 0.06em; line-height: 1; white-space: nowrap; }
+.w-scope__en { font-size: 9.5px; letter-spacing: 0.22em; opacity: 0.6; }
+.w-scope__m { display: inline-flex; gap: 3px; }
+.w-scope__m i { width: 15px; height: 3px; background: rgba(255, 255, 255, 0.16); }
+.w-scope__m i.is-on { background: var(--acc); }
+.w-scope__d {
+  font-size: 12px; color: var(--ink-3); letter-spacing: 0.04em;
+  padding-left: 11px; border-left: 1px solid var(--hair-hi);
+}
+/* 参与制作：同色系但降一档；部分参与：退成中性色，仍然清楚可读 */
+.w-scope[data-scope="join"] {
+  border-color: rgba(var(--acc-rgb), 0.26);
+  background: rgba(var(--acc-rgb), 0.08);
+}
+.w-scope[data-scope="join"]::before { opacity: 0.7; }
+.w-scope[data-scope="part"] {
+  border-color: var(--hair-hi);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--ink-2);
+}
+.w-scope[data-scope="part"]::before { background: var(--ink-4); }
+.w-scope[data-scope="part"] .w-scope__m i.is-on { background: var(--ink-3); }
+
 .w-logline {
   font-size: 16px; line-height: 1.85;
   color: var(--ink-2);

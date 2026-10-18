@@ -87,6 +87,7 @@
     this.readNum = root.querySelector('.dial-readout__idx');
     this.readTitle = root.querySelector('.dial-readout__title');
     this.readType = root.querySelector('.dial-readout__type');
+    this.scopeEl = root.querySelector('.dial-readout__scope');
     this.barDots = [];
     /* 注意：移动端 FAB 位于 .rail 之外（为避免被 .shell 的滤镜影响），需从文档级查询 */
     this.fab = document.querySelector('.rail__fab');
@@ -487,6 +488,14 @@
     if (this.readNum) this.readNum.textContent = w.n + ' / ' + ('0' + this.n).slice(-2);
     if (this.readTitle) this.readTitle.textContent = w.title;
     if (this.readType) this.readType.textContent = w.typeLabel;
+    if (this.scopeEl) {
+      var sc = (WB.SCOPE || {})[w.scope] || (WB.SCOPE || {}).join || {};
+      this.scopeEl.setAttribute('data-scope', w.scope || 'join');
+      var sb = this.scopeEl.querySelector('b');
+      var se = this.scopeEl.querySelector('em');
+      if (sb) sb.textContent = sc.zh || '';
+      if (se) se.textContent = sc.en || '';
+    }
 
     for (var b = 0; b < this.barDots.length; b++) this.barDots[b].classList.toggle('is-on', b === this.index);
 

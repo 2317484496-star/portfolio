@@ -138,11 +138,18 @@
               <span class="w-eyebrow__cat mono" id="wCat">都市奇幻</span>
               <span class="w-eyebrow__meta mono">
                 <span id="wYear">2025</span>
-                <i id="wRoleSep"></i><span id="wRole"></span>
               </span>
             </div>
             <h1 class="w-title" id="wTitle">作品标题</h1>
             <div class="w-sub mono" id="wSub"></div>
+
+            <!-- 参与程度：一眼能看出「主导 / 参与 / 部分」，不靠读小字 -->
+            <div class="w-scope" id="wScope" data-scope="lead" role="note">
+              <span class="w-scope__v" id="wScopeVal">主导制作</span>
+              <span class="w-scope__en mono" id="wScopeEn">LEAD</span>
+              <span class="w-scope__m" id="wScopeMeter" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="w-scope__d" id="wScopeDetail"></span>
+            </div>
             <p class="w-logline" id="wLogline"></p>
             <div class="w-tags" id="wTags"></div>
           </header>
@@ -259,6 +266,9 @@
           <span class="dial-readout__type mono"></span>
         </div>
         <h2 class="dial-readout__title"></h2>
+        <div class="dial-readout__scope" id="dialScope">
+          <i aria-hidden="true"></i><b></b><em class="mono"></em>
+        </div>
         <div class="dial-readout__bar" aria-hidden="true"></div>
         <div class="dial-readout__hint mono">
           <span class="drag-ico" aria-hidden="true">

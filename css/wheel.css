@@ -243,6 +243,22 @@
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
+/* 轮盘读数里的参与程度：色点 + 档位词，扫一眼就知道这一部他负责到哪一层 */
+.dial-readout__scope {
+  display: flex; align-items: center; gap: 7px;
+  margin: 2px 0 10px;
+}
+.dial-readout__scope i {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--acc); box-shadow: 0 0 8px rgba(var(--acc-rgb), 0.8);
+}
+.dial-readout__scope b {
+  font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-2);
+}
+.dial-readout__scope em { font-style: normal; font-size: 9px; letter-spacing: 0.2em; color: var(--ink-4); }
+.dial-readout__scope[data-scope="part"] i { background: var(--ink-4); box-shadow: none; }
+.dial-readout__scope[data-scope="part"] b { color: var(--ink-3); font-weight: 500; }
+
 .dial-readout__bar {
   display: flex; gap: 3px; align-items: center; height: 2px;
 }

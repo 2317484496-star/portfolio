@@ -578,6 +578,30 @@
     this.scroller.scrollTo({ top: to, behavior: U.reduced() ? 'auto' : 'smooth' });
   };
 
+  /* ------------------------------------------------------------ 参与程度 */
+  Stage.prototype._paintScope = function (w) {
+    var el = this.$('wScope');
+    if (!el) return;
+    var map = WB.SCOPE || {};
+    var sc = map[w.scope] || map.join;
+    el.setAttribute('data-scope', w.scope || 'join');
+
+    this.$('wScopeVal').textContent = sc.zh;
+    this.$('wScopeEn').textContent = sc.en;
+
+    var meter = this.$('wScopeMeter');
+    if (meter) {
+      var bars = meter.children;
+      for (var i = 0; i < bars.length; i++) bars[i].classList.toggle('is-on', i < sc.n);
+    }
+
+    var detail = U.scopeDetail(w.role, sc);
+    var dEl = this.$('wScopeDetail');
+    if (dEl) { dEl.textContent = detail; dEl.hidden = !detail; }
+
+    el.setAttribute('aria-label', '参与程度：' + sc.zh + (detail ? '，' + detail : ''));
+  };
+
   /* ---------------------------------------------------------------- 渲染 */
   Stage.prototype.render = function (w, index, total, animate) {
     var self = this;
@@ -592,13 +616,11 @@
     if (idxOf) idxOf.textContent = '/ ' + ('0' + total).slice(-2);
     $('wCat').textContent = w.group;
     $('wYear').textContent = w.year;
-    /* 简历口径的项目角色（主导 / 参与），没有就不占位 */
-    var roleEl = $('wRole'), roleSep = $('wRoleSep');
-    if (roleEl) {
-      roleEl.textContent = w.role || '';
-      roleEl.hidden = !w.role;
-      if (roleSep) roleSep.hidden = !w.role;
-    }
+
+    /* 参与程度徽标：主导 / 参与 / 部分，三格长度条 + 具体分工。
+       这是访客最先要判断的事（「这片子他有几分功劳」），所以放在标题正下方，
+       而不是塞进眉标里那串 10px 的小字。 */
+    this._paintScope(w);
 
     /* 标题（拆字以便动效） */
     var title = $('wTitle');

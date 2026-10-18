@@ -602,6 +602,19 @@
     i.src = src;
   };
 
+  /* 把 role 里的「主导制作 / 参与制作 / 参与项目」剥掉，只留具体分工。
+     '执行导演 · 主导制作' → '执行导演'；'参与制作' → ''（没有分工就不占位）。 */
+  U.scopeDetail = function (role, sc) {
+    if (!role) return '';
+    var t = String(role);
+    var drop = ['主导制作', '参与制作', '参与项目', '部分参与'];
+    if (sc && sc.zh) drop.push(sc.zh);
+    drop.forEach(function (k) { if (k) t = t.split(k).join(''); });
+    t = t.replace(/^[\s·、,，/|]+|[\s·、,，/|]+$/g, '');
+    t = t.replace(/\s*·\s*/g, ' · ').replace(/\s{2,}/g, ' ');
+    return t.trim();
+  };
+
   /* 预热：在轮盘转到某部作品时就把它的主视觉解码好，
      提交时换图即为瞬时，不会出现「先空后满」。
      预热的是**实际会用的那份 webp**（原尺寸），不是原 jpg ——

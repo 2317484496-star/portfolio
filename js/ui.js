@@ -198,6 +198,8 @@
             '<img alt="' + U.esc(w.title) + ' 封面" src="' + (w._cover || w.media.cover) + '">' +
             '<span class="lv-card__i">' + U.esc(w.n) + '</span>' +
             '<span class="lv-card__type">' + U.esc(w.typeLabel) + '</span>' +
+            '<span class="lv-card__scope" data-scope="' + U.esc(w.scope || 'join') + '">' +
+              U.esc(((WB.SCOPE || {})[w.scope] || (WB.SCOPE || {}).join || {}).short || '') + '</span>' +
           '</span>' +
           '<span class="lv-card__b">' +
             '<span class="lv-card__t">' + U.esc(w.title) + '</span>' +
@@ -383,7 +385,9 @@
           ' aria-label="跳转到作品 ' + U.esc(w.n) + '：' + U.esc(w.title) + '">' +
           '<span class="about__w-i mono">' + U.esc(w.n) + '</span>' +
           '<span class="about__w-t">' + U.esc(w.title) + '</span>' +
-          '<span class="about__w-g mono">' + U.esc(w.group) + ' · ' + U.esc(w.role || w.year) + '</span>' +
+          '<span class="about__w-g mono"><span>' + U.esc(w.group) + '</span>' +
+            '<b class="about__w-s" data-scope="' + U.esc(w.scope || 'join') + '">' +
+              U.esc(((WB.SCOPE || {})[w.scope] || (WB.SCOPE || {}).join || {}).zh || '') + '</b></span>' +
           '<span class="about__w-go">' + ICO.arr + '</span></button>';
       }).join('');
 
@@ -408,8 +412,9 @@
         var groups = {}, lead = 0, join = 0;
         works.forEach(function (w) {
           if (w.group) groups[w.group] = 1;
-          if (w.role && w.role.indexOf('主导') > -1) lead++;
-          else if (w.role && w.role.indexOf('参与') > -1) join++;
+          /* 按 scope 统计，不再靠 role 文案里有没有「主导」两个字 */
+          if (w.scope === 'lead') lead++;
+          else join++;
         });
         var ys = works.map(function (w) { return parseInt(w.year, 10); }).filter(function (n) { return !isNaN(n); });
         var yMin = ys.length ? Math.min.apply(null, ys) : null;
