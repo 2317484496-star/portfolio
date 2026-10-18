@@ -200,6 +200,62 @@
   .w-hero__frame:not(.is-video) .w-hero__media { filter: none; }
 }
 
+/* ============================ 触屏左右翻页 ============================
+   只在触屏/窄屏出现，桌面端完全隐藏（桌面有轮盘、方向键、分页点三套入口）。
+   设计上刻意压低存在感：半透明玻璃底 + 细边，不与主视觉抢注意力；
+   按下时才借作品强调色亮一下，给一次明确的触觉反馈。
+   竖屏放右侧中段而不是底部，是为了不挡住「展开轮盘」那颗悬浮球。 */
+.mpager { display: none; }
+
+@media (max-width: 1024px) {
+  .mpager {
+    display: block;
+    position: fixed; left: 0; right: 0; top: 50%;
+    transform: translateY(-50%);
+    z-index: var(--z-chrome);
+    pointer-events: none;
+    transition: opacity 0.3s var(--e-out);
+  }
+  /* 浮层打开时整体让位 */
+  body.ov-open .mpager,
+  body.rail-open .mpager { opacity: 0; pointer-events: none; }
+
+  .mpager__b {
+    position: absolute; top: 0;
+    width: 38px; height: 78px;
+    display: grid; place-items: center;
+    pointer-events: auto;
+    color: rgba(255, 255, 255, 0.58);
+    background: rgba(6, 9, 18, 0.34);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(7px) saturate(120%);
+    -webkit-backdrop-filter: blur(7px) saturate(120%);
+    transition: color 0.25s var(--e-out), background 0.25s var(--e-out),
+                border-color 0.25s var(--e-out), transform 0.18s var(--e-out);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mpager__b svg { width: 17px; height: 17px; }
+  .mpager__b--prev { left: 0; border-left: 0; border-radius: 0 2px 2px 0; }
+  .mpager__b--next { right: 0; border-right: 0; border-radius: 2px 0 0 2px; }
+
+  .mpager__b:active,
+  .mpager__b.is-hit {
+    color: #fff;
+    background: rgba(var(--acc-rgb, 34, 225, 255), 0.3);
+    border-color: rgba(var(--acc-rgb, 34, 225, 255), 0.6);
+  }
+  .mpager__b--prev:active,
+  .mpager__b--prev.is-hit { transform: translateX(2px); }
+  .mpager__b--next:active,
+  .mpager__b--next.is-hit { transform: translateX(-2px); }
+}
+
+/* 861–1024：iPad 竖屏这一档还留着右侧轮盘，右键要让开轨道宽度 */
+@media (min-width: 861px) and (max-width: 1024px) {
+  .mpager__b--next { right: var(--rail); }
+}
+
 /* 打印：极简线性输出 */
 @media print {
   #gl, .grid-overlay, .scanlines, .vignette, .rail, .head, .foot, .cursor, .cursor-dot, #preloader { display: none !important; }

@@ -187,6 +187,9 @@
   color: color-mix(in srgb, var(--acc) 74%, #ffffff);
 }
 .w-scope[data-scope="join"] .w-scope__m i { background: rgba(255, 255, 255, 0.16); }
+/* 亮起来的那两格必须单独点回来：上面这条把三格全刷成了 0.16，
+   优先级又高于基础规则里的 .is-on，不补这一句二档的长度条就整条发灰。 */
+.w-scope[data-scope="join"] .w-scope__m i.is-on { background: currentColor; }
 .w-scope[data-scope="join"] .w-scope__d { color: var(--ink-2); opacity: 1; border-left-color: var(--hair-hi); }
 
 /* 三档：中性灰，只用一条细边，读起来最轻 */

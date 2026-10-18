@@ -317,6 +317,19 @@
     <span class="rail__fab-t"><b>作品标题</b><span>展开轮盘 / WHEEL</span></span>
   </button>
 
+  <!-- ====================================================== 触屏左右翻页 -->
+  <!-- 只用按键，不做边缘滑动：iOS 与 Android 的手势导航都把左右边缘判给「返回」，
+       从边缘起手会被系统吃掉，甚至在浏览器里直接退出站点。
+       按键没有这层冲突，也不用教用户「要从最边上开始滑」。 -->
+  <div class="mpager" id="mpager">
+    <button class="mpager__b mpager__b--prev" type="button" id="mpagerPrev" aria-label="上一部作品">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg>
+    </button>
+    <button class="mpager__b mpager__b--next" type="button" id="mpagerNext" aria-label="下一部作品">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg>
+    </button>
+  </div>
+
   <!-- ====================================================== 悬停预览卡 -->
   <div class="peek" id="peek" aria-hidden="true">
     <img class="peek__thumb" alt="">

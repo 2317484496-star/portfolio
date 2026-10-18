@@ -165,6 +165,7 @@
 
     w('01', {
       n: '01',
+      seq: 1,
       id: 'handpuppet',
       title: '买到等身手办，她夜里觉醒了？',
       latin: 'MY SUCCUBUS GIRLFRIEND',
@@ -209,6 +210,7 @@
 
     w('02', {
       n: '02',
+      seq: 2,
       id: 'crown-princess',
       title: '重生拒嫁恶皇子，我转头当上太子妃',
       latin: 'THE SECOND LIFE',
@@ -255,6 +257,7 @@
 
     w('03', {
       n: '03',
+      seq: 9,
       id: 'pause',
       title: '从现在起，我将暂停世界一分钟',
       latin: 'ONE MINUTE ON HOLD',
@@ -263,7 +266,7 @@
       year: '2026',
       type: 'video',
       typeLabel: '废土短剧',
-      role: '参与制作 · 执行导演',
+      role: '参与制作 · 资产与视频制作',
       scope: 'join',
       accent: '#22D3EE',
       accent2: '#6D8BFF',
@@ -279,8 +282,8 @@
       note: '时停不能靠降速做。全片只用一套固定语法：暂停前是手持跟拍、轻微晃动、环境音嘈杂；按停的瞬间切成一帧极干净的固定机位，衣角、雨滴、火光全部锁死，只有白野一个人在画框里动。观众第二次看到这个机位，就知道「一分钟开始了」。也正因为如此，时停段落的光必须足够硬——软光会让「静止」读起来像「慢动作」。',
       facts: [
         ['形态', '影像成片 · 16:9'],
-        ['职责', '分镜设计 / 提示词工程'],
-        ['产出', '分镜表 · 关键帧 · 成片'],
+        ['职责', '资产制作 / 视频制作'],
+        ['产出', '资产包 · 关键帧 · 成片'],
         ['场景', '灰土小镇 / 荒野难民营 / 黑山山脉']
       ],
       tags: ['废土', '时间停止', '穿越', '异化兽', '爽感'],
@@ -296,6 +299,7 @@
 
     w('04', {
       n: '04',
+      seq: 5,
       id: 'evil-god',
       title: '这个邪神可太正了',
       latin: 'THE RIGHTEOUS EVIL GOD',
@@ -339,6 +343,7 @@
 
     w('05', {
       n: '05',
+      seq: 6,
       id: 'witch',
       title: '末日重启，魔女才是第一生产力',
       latin: 'THE WITCH ECONOMY',
@@ -381,6 +386,7 @@
 
     w('06', {
       n: '06',
+      seq: 10,
       id: 'slash-immortal',
       title: '斩仙台上何人？灵台方寸山关门弟子',
       latin: 'THE LAST DISCIPLE',
@@ -426,6 +432,7 @@
 
     w('07', {
       n: '07',
+      seq: 8,
       id: 'weird-world',
       title: '我在怪异世界搞解剖直播',
       latin: 'AUTOPSY LIVE',
@@ -469,6 +476,7 @@
 
     w('08', {
       n: '08',
+      seq: 7,
       id: 'game-for-peace',
       title: '和平精英',
       latin: 'GAME FOR PEACE',
@@ -514,6 +522,7 @@
 
     w('09', {
       n: '09',
+      seq: 3,
       id: 'lovesick-song',
       title: '古相思曲',
       latin: 'AN ANCIENT LOVE SONG',
@@ -556,6 +565,7 @@
 
     w('10', {
       n: '10',
+      seq: 4,
       id: 'river-treasure',
       title: '大河密藏',
       latin: 'THE RIVER HOARD',
@@ -564,7 +574,7 @@
       year: '2026',
       type: 'video',
       typeLabel: '悬疑短剧',
-      role: '参与制作 · PV / 部分剧集',
+      role: '参与制作 · 剧集制作 / 资产制作',
       scope: 'join',
       accent: '#3B82F6',
       accent2: '#F2A63B',
@@ -580,8 +590,8 @@
       note: '这个单元只有两种介质：火与水。祠堂大火全部用点光源与低频震动，故意不给环境全貌，让观众和幼年的弥时一样只能看见角落；水下戏园反过来，用大面积散射光和悬浮颗粒，让真相显得清晰却无处着力。每次进入残响，声音先消失半拍，再浮出死者的呼吸——这是「清罪」开始的听觉标记。',
       facts: [
         ['形态', '影像成片 · 16:9'],
-        ['职责', '概念设定 / 光线设计'],
-        ['产出', '分镜表 · 关键帧 · 成片'],
+        ['职责', '剧集制作 / 资产制作'],
+        ['产出', '资产包 · 剧集 · 成片'],
         ['场景', '弥家祠堂 / 昭披耶河 / 潮剧戏台 / 沉水戏园']
       ],
       tags: ['悬疑', '单元故事', '记忆残响', '火与水', '潮剧'],
@@ -598,6 +608,7 @@
 
     w('11', {
       n: '11',
+      seq: 11,
       id: 'pearl-diver',
       title: '采珠捞个龙太子，整个东海被我承包了',
       latin: 'PEARL DIVER & THE DRAGON PRINCE',
@@ -643,13 +654,20 @@
 
   ];
 
-  /* 展示顺序按参与权重排：主导 → 参与 → 部分，同档内保持原有先后。
+  /* 展示顺序：先按参与权重（主导 → 参与 → 部分），同档内再按 seq 排。
+     seq 就是策展顺序 —— 想换位置只改 seq，不用挪动整段数据块，
+     也不会因为数组顺序被误改而打乱权重分档。
      编号跟着展示顺序重排（01 就是第一个展示的），但**目录不动** ——
      素材路径一律走 w.dir，w.n 只用于显示与占位图。 */
   (function () {
     var RANK = { lead: 0, join: 1, part: 2 };
     WB.WORKS.sort(function (a, b) {
-      return (RANK[a.scope] == null ? 9 : RANK[a.scope]) - (RANK[b.scope] == null ? 9 : RANK[b.scope]);
+      var ra = RANK[a.scope] == null ? 9 : RANK[a.scope];
+      var rb = RANK[b.scope] == null ? 9 : RANK[b.scope];
+      if (ra !== rb) return ra - rb;
+      var sa = a.seq == null ? 999 : a.seq;
+      var sb = b.seq == null ? 999 : b.seq;
+      return sa - sb;
     });
     WB.WORKS.forEach(function (w, i) { w.n = ('0' + (i + 1)).slice(-2); });
   })();

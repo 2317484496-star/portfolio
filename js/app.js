@@ -143,6 +143,7 @@
     /* 顶栏 / 快捷键 */
     this.bindChrome();
     this.bindKeys();
+    this.bindPager();
     this.bindNet();
     this.bindHash();
     this.seo();
@@ -621,6 +622,48 @@
         e.preventDefault();
         WB.UI.Keys.toggle();
       }
+    });
+  };
+
+  /* ============================================================ 触屏翻页按键
+     桌面端这套按键是 display:none，绑了也不会有副作用。
+     用 pointerdown 而不是 click：手机上 click 有约 300ms 的等待（双击缩放的判定），
+     滚一下作品页就会觉得「按了没反应」。 */
+  App.bindPager = function () {
+    var self = this;
+    var prev = document.getElementById('mpagerPrev');
+    var next = document.getElementById('mpagerNext');
+
+    function go(btn, dir) {
+      if (document.body.classList.contains('ov-open')) return;
+      if (document.body.classList.contains('rail-open')) return;
+      self.step(dir);
+      /* 按下时借一次强调色，作为「确实切过去了」的视觉回执 */
+      if (btn) {
+        btn.classList.add('is-hit');
+        setTimeout(function () { btn.classList.remove('is-hit'); }, 220);
+      }
+    }
+
+    if (prev) {
+      prev.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        e.preventDefault(); go(prev, -1);
+      });
+    }
+    if (next) {
+      next.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        e.preventDefault(); go(next, 1);
+      });
+    }
+
+    /* 键盘可达：focus 后回车/空格也能切（按键本身是 <button>，这里补 preventDefault 防滚屏） */
+    [[prev, -1], [next, 1]].forEach(function (pair) {
+      if (!pair[0]) return;
+      pair[0].addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(pair[0], pair[1]); }
+      });
     });
   };
 
