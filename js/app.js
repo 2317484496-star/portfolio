@@ -256,6 +256,7 @@
     var rail = document.querySelector('.rail');
     if (rail) {
       rail.style.setProperty('--acc', w.accent);
+      rail.style.setProperty('--acc-text', U.textOn(w.accent));
       rail.style.setProperty('--acc-rgb', U.rgbStr(U.hex2rgb(w.accent)));
       rail.style.setProperty('--acc-2', w.accent2);
       rail.style.setProperty('--acc-2-rgb', U.rgbStr(U.hex2rgb(w.accent2)));
@@ -331,7 +332,7 @@
     /* 清除轮盘局部覆盖色，让全站色接管 */
     var rail = document.querySelector('.rail');
     if (rail) {
-      ['--acc', '--acc-rgb', '--acc-2', '--acc-2-rgb'].forEach(function (p) { rail.style.removeProperty(p); });
+      ['--acc', '--acc-text', '--acc-rgb', '--acc-2', '--acc-2-rgb'].forEach(function (p) { rail.style.removeProperty(p); });
     }
 
     this.stage.transitionTo(w, i, this.works.length);
