@@ -129,7 +129,7 @@
   }
   .rail__fab-t { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.3; }
   .rail__fab-t b { font-size: 11.5px; font-weight: 600; color: var(--ink-1); max-width: 116px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .rail__fab-t span { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--acc); }
+  .rail__fab-t span { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; color: var(--acc-text, var(--acc)); }
 
   /* 移动端竖向列表（抽屉内） */
   .mob-list { display: flex; flex-direction: column; width: 100%; max-width: min(400px, 92vw); margin-top: 4px; }
@@ -141,7 +141,7 @@
     transition: color 0.3s var(--e-out), padding-left 0.3s var(--e-out);
   }
   .mob-list button.is-on { color: var(--ink-1); }
-  .mob-list button.is-on .mob-list__n { color: var(--acc); }
+  .mob-list button.is-on .mob-list__n { color: var(--acc-text, var(--acc)); }
   .mob-list button:active { padding-left: 10px; }
   .mob-list__n { font-family: var(--font-disp); font-size: 11.5px; letter-spacing: 0.1em; color: var(--ink-4); }
   .mob-list__t { font-size: 13.5px; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }

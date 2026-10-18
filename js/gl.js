@@ -104,6 +104,11 @@
     '  col += gr * 0.026;',
     '',
     '  col = max(col, vec3(0.0));',
+    /* 亮度上限：背景是给文字当底的，不能盖过文字。
+       以前强调色偏浅（如近白的珠光色）时，整片背景会被推到 60% 亮度，
+       压在上面的灰色小字直接糊掉。这里按感知亮度整体等比压暗，色相不变。 */
+    '  float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));',
+    '  col *= min(1.0, 0.20 / max(lum, 0.0001));',
     '  col *= uEnter;',
     '  gl_FragColor = vec4(col, 1.0);',
     '}'
@@ -202,10 +207,23 @@
     if (app) app.classList.add('no-gl');
   };
 
+  /* 背景用色的亮度上限。
+     强调色是给 UI 用的，直接拿来铺背景会出事：像《采珠》那种近白的珠光色
+     （#D7F0FF）会把整片背景打到 60% 亮度，压在上面的灰色小字就全糊了。
+     这里只压**背景**这一路（UI 的强调色不动），保持色相、限住明度。 */
+  var ACC_MAX_LUM = 0.30;
+
+  function capLum(rgb, max) {
+    var L = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    if (L <= max) return rgb;
+    var k = max / L;
+    return [rgb[0] * k, rgb[1] * k, rgb[2] * k];
+  }
+
   /* 目标值（由外部驱动，内部做阻尼跟随，避免硬切） */
   GL.prototype.setAccent = function (hex, hex2, immediate) {
-    this.accTarget = U.hex2rgb(hex).map(function (v) { return v / 255; });
-    if (hex2) this.acc2Target = U.hex2rgb(hex2).map(function (v) { return v / 255; });
+    this.accTarget = capLum(U.hex2rgb(hex).map(function (v) { return v / 255; }), ACC_MAX_LUM);
+    if (hex2) this.acc2Target = capLum(U.hex2rgb(hex2).map(function (v) { return v / 255; }), ACC_MAX_LUM);
     /* 首屏 / 深链直接落位：不要从上一部作品的颜色渐变过来 */
     if (immediate) {
       this.acc = this.accTarget.slice();

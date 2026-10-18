@@ -114,8 +114,16 @@
       });
     }
 
-    /* 视频播放：懒加载 */
-    this._onScroll = null;
+    /* 切到后台 / 离开页面就停播。手机上不做这一步，
+       回来时会听到半截声音，也白白占着解码器。 */
+    var pauseOnHide = function () {
+      var v = document.querySelector('#wHeroFrame video');
+      if (v && !v.paused) v.pause();
+    };
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) pauseOnHide();
+    });
+    window.addEventListener('pagehide', pauseOnHide);
   };
 
   /* ---------------------------------------------------------------- 播放 */
@@ -465,6 +473,27 @@
     };
   };
 
+  /* 彻底停掉当前成片。
+     只把 <video> 从 DOM 里摘掉是不够的 —— 元素还能被 JS 引用着继续解码，
+     手机上就表现为「切到下一部了，上一部的声还在放」。所以要先 pause、
+     置 muted、清 src 再 load()，把解码器与网络请求一起断掉。 */
+  Stage.prototype.stopVideo = function () {
+    var frame = this.$('wHeroFrame');
+    if (!frame) return;
+    var v = frame.querySelector('video');
+    if (!v) return;
+    try {
+      v.pause();
+      v.muted = true;
+      v.removeAttribute('src');
+      v.load();
+    } catch (e) { /* 忽略 */ }
+    v.remove();
+    var bar = frame.querySelector('.vctl');
+    if (bar) bar.remove();
+    frame.classList.remove('is-playing', 'is-idle', 'is-ended', 'is-video');
+  };
+
   Stage.prototype._toast = function (msg) {
     if (this.o.onToast) this.o.onToast(msg);
   };
@@ -585,6 +614,8 @@
     var map = WB.SCOPE || {};
     var sc = map[w.scope] || map.join;
     el.setAttribute('data-scope', w.scope || 'join');
+    /* 实底那一档的文字色按强调色亮度算，深色/浅色自动选 */
+    el.style.setProperty('--scope-ink', U.inkOn(w.accent));
 
     this.$('wScopeVal').textContent = sc.zh;
     this.$('wScopeEn').textContent = sc.en;
@@ -654,10 +685,8 @@
     /* 竖屏作品：首屏改成「左标题 / 右竖幅海报」并置，画框才能完整落在首屏内 */
     if (this.inner) this.inner.classList.toggle('is-portrait', !!w.isPortrait);
 
-    var oldVid = frame.querySelector('video');
-    if (oldVid) oldVid.remove();
-    var oldBar = frame.querySelector('.vctl');
-    if (oldBar) oldBar.remove();
+    /* 换内容前先把上一部的成片停干净（含清 src），避免后台继续出声 */
+    this.stopVideo();
     frame.classList.remove('is-playing', 'is-idle', 'is-ended');
     var media = frame.querySelector('img.w-hero__media');
     if (!media) {
@@ -918,6 +947,9 @@
   Stage.prototype.transitionTo = function (w, index, total, done) {
     var self = this;
     var g = window.gsap;
+
+    /* 提交即停播：扫光只有 0.16s 淡出，但声音没必要陪着走完 */
+    this.stopVideo();
 
     if (!g || U.reduced()) {
       this.render(w, index, total, false);

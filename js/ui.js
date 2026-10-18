@@ -198,7 +198,8 @@
             '<img alt="' + U.esc(w.title) + ' 封面" src="' + (w._cover || w.media.cover) + '">' +
             '<span class="lv-card__i">' + U.esc(w.n) + '</span>' +
             '<span class="lv-card__type">' + U.esc(w.typeLabel) + '</span>' +
-            '<span class="lv-card__scope" data-scope="' + U.esc(w.scope || 'join') + '">' +
+            '<span class="lv-card__scope" data-scope="' + U.esc(w.scope || 'join') + '"' +
+              (w.scope === 'lead' ? ' style="color:' + U.inkOn(w.accent) + '"' : '') + '>' +
               U.esc(((WB.SCOPE || {})[w.scope] || (WB.SCOPE || {}).join || {}).short || '') + '</span>' +
           '</span>' +
           '<span class="lv-card__b">' +

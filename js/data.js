@@ -263,8 +263,8 @@
       year: '2026',
       type: 'video',
       typeLabel: '废土短剧',
-      role: '执行导演 · 主导制作',
-      scope: 'lead',
+      role: '参与制作 · 执行导演',
+      scope: 'join',
       accent: '#22D3EE',
       accent2: '#6D8BFF',
       heroCap: '时间停摆的那一分钟 / KEY ART',
@@ -477,7 +477,7 @@
       year: '2025',
       type: 'mixed',
       typeLabel: '竖屏漫剧 + 角色设定',
-      role: '参与制作 · 分镜设计与角色设定',
+      role: '参与制作 · 分镜设计与视频制作',
       scope: 'join',
       accent: '#FF6A1A',
       accent2: '#38D6FF',
@@ -522,8 +522,8 @@
       year: '2025',
       type: 'video',
       typeLabel: '古风短剧',
-      role: '参与项目 · PV / 部分剧集',
-      scope: 'part',
+      role: '执行导演 · 主导制作',
+      scope: 'lead',
       accent: '#C0392B',
       accent2: '#E9C27A',
       heroCap: '黑鸦与红绸 / KEY ART',
@@ -564,8 +564,8 @@
       year: '2026',
       type: 'video',
       typeLabel: '悬疑短剧',
-      role: '参与项目 · PV / 部分剧集',
-      scope: 'part',
+      role: '参与制作 · PV / 部分剧集',
+      scope: 'join',
       accent: '#3B82F6',
       accent2: '#F2A63B',
       heroCap: '弥家祠堂 · 那一夜的火 / KEY ART',
@@ -642,6 +642,17 @@
     })
 
   ];
+
+  /* 展示顺序按参与权重排：主导 → 参与 → 部分，同档内保持原有先后。
+     编号跟着展示顺序重排（01 就是第一个展示的），但**目录不动** ——
+     素材路径一律走 w.dir，w.n 只用于显示与占位图。 */
+  (function () {
+    var RANK = { lead: 0, join: 1, part: 2 };
+    WB.WORKS.sort(function (a, b) {
+      return (RANK[a.scope] == null ? 9 : RANK[a.scope]) - (RANK[b.scope] == null ? 9 : RANK[b.scope]);
+    });
+    WB.WORKS.forEach(function (w, i) { w.n = ('0' + (i + 1)).slice(-2); });
+  })();
 
   /* 参与程度：三档。页面上的徽标、长度条、列表角标都按这个口径渲染，
      不再靠 role 字符串里有没有「主导」两个字去猜。 */

@@ -113,10 +113,50 @@
   };
   U.rgbStr = function (rgb) { return rgb[0] + ',' + rgb[1] + ',' + rgb[2]; };
 
+  /* 相对亮度 / 对比度（WCAG），用于判断「这个颜色当文字够不够清楚」 */
+  U.lum = function (hex) {
+    var c = U.hex2rgb(hex).map(function (v) {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  U.contrast = function (a, b) {
+    var la = U.lum(a), lb = U.lum(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  };
+
+  /* 强调色当**文字**用时，如果对近黑底不够清楚，就往白色方向提亮，
+     直到对比度 ≥ 4.6:1。色块、描边、发光仍然用原色，不改设计语言。 */
+  U.textOn = function (hex, bg) {
+    var BG = bg || '#06070E';
+    if (U.contrast(hex, BG) >= 4.6) return hex;
+    for (var t = 0.08; t <= 0.66; t += 0.08) {
+      var c = U.mix(hex, '#FFFFFF', t);
+      if (U.contrast(c, BG) >= 4.6) return c;
+    }
+    return U.mix(hex, '#FFFFFF', 0.66);
+  };
+
+  /* 在某个底色上该用深色字还是浅色字：按 WCAG 相对亮度算，取对比更高的那一侧。
+     实底徽标要用：09 那种深红、11 那种近白，直接写死深色字会糊。 */
+  U.inkOn = function (hex) {
+    var rgb = U.hex2rgb(hex).map(function (v) {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    var L = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    var DARK = 0.0154, LIGHT = 0.925;            /* #04060C / #F3F7FF */
+    var cd = (Math.max(L, DARK) + 0.05) / (Math.min(L, DARK) + 0.05);
+    var cl = (Math.max(L, LIGHT) + 0.05) / (Math.min(L, LIGHT) + 0.05);
+    return cd >= cl ? '#04060C' : '#F3F7FF';
+  };
+
   /* 把强调色写到 :root 上，驱动整站换色 */
   U.applyAccent = function (acc, acc2) {
     var r = document.documentElement.style;
     r.setProperty('--acc', acc);
+    r.setProperty('--acc-text', U.textOn(acc));
     r.setProperty('--acc-rgb', U.rgbStr(U.hex2rgb(acc)));
     if (acc2) {
       r.setProperty('--acc-2', acc2);
@@ -153,6 +193,7 @@
 
     function write(a, b) {
       root.style.setProperty('--acc', a);
+      root.style.setProperty('--acc-text', U.textOn(a));
       root.style.setProperty('--acc-rgb', U.rgbStr(U.hex2rgb(a)));
       root.style.setProperty('--acc-2', b);
       root.style.setProperty('--acc-2-rgb', U.rgbStr(U.hex2rgb(b)));

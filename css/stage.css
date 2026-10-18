@@ -23,6 +23,10 @@
   position: absolute; inset: 0;
   overflow-y: auto; overflow-x: hidden;
   padding: 40px var(--gutter) 96px;
+  /* 文字安全区：左侧叠一层很淡的暗场，背景再怎么亮，正文都不会被冲掉。
+     渐变只覆盖左侧与上半屏，右侧主视觉不受影响。 */
+  background: radial-gradient(105% 74% at 0% 38%,
+    rgba(3, 4, 9, 0.88) 0%, rgba(3, 4, 9, 0.52) 34%, rgba(3, 4, 9, 0) 64%);
   /* 关闭原生平滑，交给 Lenis 统一驱动，避免两套缓动互相打架 */
   scroll-behavior: auto;
 }
@@ -77,7 +81,7 @@
 .stage.is-previewing .stage__cand { opacity: 1; transform: none; }
 .stage__cand-n {
   font-family: var(--font-disp); font-size: 13px; letter-spacing: 0.12em;
-  color: var(--acc); flex: none;
+  color: var(--acc-text, var(--acc)); flex: none;
 }
 .stage__cand-t {
   font-size: 13px; color: var(--ink-1);
@@ -127,7 +131,7 @@
   box-shadow: 0 0 20px rgba(var(--acc-rgb), 0.45);
 }
 .w-eyebrow__of { font-size: 11.5px; letter-spacing: 0.12em; color: var(--ink-4); }
-.w-eyebrow__cat { color: var(--acc); }
+.w-eyebrow__cat { color: var(--acc-text, var(--acc)); }
 .w-eyebrow__sep { width: 22px; height: 1px; background: var(--hair-hi); }
 .w-eyebrow__meta { color: var(--ink-3); display: inline-flex; align-items: center; gap: 10px; }
 .w-eyebrow__meta i { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
@@ -153,64 +157,49 @@
 }
 
 /* ---- 参与程度徽标 ----
-   放在标题正下方，三档长度条 + 具体分工。访客第一眼要判断的是
-   「这片子他出了多少力」，所以它比标签、比简介都更靠前。 */
+   三档靠「填充强度」区分，而不是靠每部作品各自的强调色深浅 ——
+   强调色每部都不一样，用它来表达档位，切一部作品就换一套颜色，反而读不出来。
+   lead 实底 / join 描边 / part 细描边，任何强调色下都是同一套重量关系。 */
 .w-scope {
   display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 10px;
   margin: -6px 0 22px;
-  padding: 8px 14px 8px 13px;
-  position: relative;
-  border: 1px solid rgba(var(--acc-rgb), 0.36);
-  background: linear-gradient(100deg, rgba(var(--acc-rgb), 0.17), rgba(var(--acc-rgb), 0.02) 66%);
-  color: var(--acc);
+  padding: 8px 14px 8px 14px;
+  border: 1px solid var(--acc);
+  background: var(--acc);
+  color: var(--scope-ink, var(--ink-inv));
   transition: color 0.4s var(--e-out), border-color 0.4s var(--e-out), background 0.4s var(--e-out);
 }
-.w-scope::before {
-  content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px;
-  background: var(--acc);
-}
-.w-scope__v { font-size: 13.5px; font-weight: 600; letter-spacing: 0.06em; line-height: 1; white-space: nowrap; }
-.w-scope__en { font-size: 9.5px; letter-spacing: 0.22em; opacity: 0.6; }
+.w-scope__v { font-size: 13.5px; font-weight: 700; letter-spacing: 0.08em; line-height: 1; white-space: nowrap; }
+.w-scope__en { font-size: 10px; letter-spacing: 0.2em; opacity: 0.62; }
 .w-scope__m { display: inline-flex; gap: 3px; }
-.w-scope__m i { width: 15px; height: 3px; background: rgba(255, 255, 255, 0.16); }
-.w-scope__m i.is-on { background: var(--acc); }
+.w-scope__m i { width: 15px; height: 3px; background: rgba(0, 0, 0, 0.22); }
+.w-scope__m i.is-on { background: currentColor; }
 .w-scope__d {
-  font-size: 12px; color: var(--ink-3); letter-spacing: 0.04em;
-  padding-left: 11px; border-left: 1px solid var(--hair-hi);
+  font-size: 12px; letter-spacing: 0.04em; color: inherit; opacity: 0.78;
+  padding-left: 11px; border-left: 1px solid rgba(0, 0, 0, 0.22);
 }
-/* 参与制作：同色系但降一档；部分参与：退成中性色，仍然清楚可读 */
+
+/* 二档：描边 + 同色字，没有实底 */
 .w-scope[data-scope="join"] {
-  border-color: rgba(var(--acc-rgb), 0.26);
-  background: rgba(var(--acc-rgb), 0.08);
+  border-color: rgba(var(--acc-rgb), 0.62);
+  background: rgba(var(--acc-rgb), 0.09);
+  color: var(--acc-text, var(--acc));
+  color: color-mix(in srgb, var(--acc) 74%, #ffffff);
 }
-.w-scope[data-scope="join"]::before { opacity: 0.7; }
+.w-scope[data-scope="join"] .w-scope__m i { background: rgba(255, 255, 255, 0.16); }
+.w-scope[data-scope="join"] .w-scope__d { color: var(--ink-2); opacity: 1; border-left-color: var(--hair-hi); }
+
+/* 三档：中性灰，只用一条细边，读起来最轻 */
 .w-scope[data-scope="part"] {
-  border-color: var(--hair-hi);
-  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--ink-2);
 }
-.w-scope[data-scope="part"]::before { background: var(--ink-4); }
+/* 最轻的一档也要读得清：档位词用亮白，只有英文与分工降一档 */
+.w-scope[data-scope="part"] .w-scope__v { color: var(--ink-1); }
+.w-scope[data-scope="part"] .w-scope__m i { background: rgba(255, 255, 255, 0.14); }
 .w-scope[data-scope="part"] .w-scope__m i.is-on { background: var(--ink-3); }
-
-.w-logline {
-  font-size: 16px; line-height: 1.85;
-  color: var(--ink-2);
-  max-width: 62ch;
-  padding-left: 17px;
-  border-left: 1px solid rgba(var(--acc-rgb), 0.5);
-  text-wrap: pretty;
-}
-
-.w-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 22px; }
-.w-tags span {
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-  padding: 4px 9px;
-  border: 1px solid var(--hair);
-  color: var(--ink-3);
-  background: var(--glass);
-  transition: color 0.35s var(--e-out), border-color 0.35s var(--e-out);
-}
-.w-tags span:hover { color: var(--acc); border-color: rgba(var(--acc-rgb), 0.5); }
+.w-scope[data-scope="part"] .w-scope__d { color: var(--ink-2); opacity: 1; border-left-color: var(--hair-hi); }
 
 /* ============================ 主视觉 ============================ */
 
@@ -338,7 +327,7 @@ video.w-hero__media {
   text-shadow: 0 1px 6px rgba(0,0,0,0.9);
   pointer-events: none;
 }
-.w-hero__tc b { color: var(--acc); }
+.w-hero__tc b { color: var(--acc-text, var(--acc)); }
 .w-hero__badge {
   position: absolute; z-index: 4; right: 14px; top: 12px;
   padding: 4px 9px;
@@ -367,14 +356,14 @@ video.w-hero__media {
   display: flex; align-items: center; gap: 11px;
   margin-bottom: 16px;
 }
-.sec-h__i { color: var(--acc); }
+.sec-h__i { color: var(--acc-text, var(--acc)); }
 .sec-h__t { font-size: 13px; font-weight: 600; color: var(--ink-1); letter-spacing: 0.06em; }
 .sec-h__line { flex: 1; height: 1px; background: var(--hair-lo); }
 
 .w-body { font-size: 14.5px; line-height: 1.95; color: var(--ink-2); }
 .w-body p + p { margin-top: 15px; }
 .w-body strong { color: var(--ink-1); font-weight: 600; }
-.w-body em { font-style: normal; color: var(--acc); }
+.w-body em { font-style: normal; color: var(--acc-text, var(--acc)); }
 .w-body + .sec-h { margin-top: 34px; }
 
 /* 事实表 */
@@ -416,7 +405,7 @@ video.w-hero__media {
   border: 1px solid var(--hair); color: var(--ink-3);
   transition: all 0.3s var(--e-out);
 }
-.w-gallery__nav button:hover { color: var(--acc); border-color: rgba(var(--acc-rgb), 0.5); background: rgba(var(--acc-rgb), 0.08); }
+.w-gallery__nav button:hover { color: var(--acc-text, var(--acc)); border-color: rgba(var(--acc-rgb), 0.5); background: rgba(var(--acc-rgb), 0.08); }
 
 .w-gallery__row {
   display: flex; gap: 14px;
@@ -486,7 +475,7 @@ video.w-hero__media {
 }
 .w-empty b { color: var(--ink-2); font-weight: 500; }
 .w-empty code {
-  font-family: var(--font-mono); font-size: 10.5px; color: var(--acc);
+  font-family: var(--font-mono); font-size: 10.5px; color: var(--acc-text, var(--acc));
   background: rgba(var(--acc-rgb), 0.08); padding: 1px 5px;
 }
 
@@ -521,7 +510,7 @@ video.w-hero__media {
   width: 18px; height: 1px; background: currentColor; opacity: 0.45;
   transition: width 0.45s var(--e-out), opacity 0.45s var(--e-out);
 }
-.w-nav__b:hover .w-nav__t { color: var(--acc); }
+.w-nav__b:hover .w-nav__t { color: var(--acc-text, var(--acc)); }
 .w-nav__b:hover .w-nav__t::before, .w-nav__b:hover .w-nav__t::after { width: 30px; opacity: 1; }
 .w-nav__b:disabled { opacity: 0.28; pointer-events: none; }
 @media (max-width: 1080px) {
@@ -531,7 +520,7 @@ video.w-hero__media {
 }
 
 .w-top-btn { color: var(--ink-3); display: inline-flex; align-items: center; gap: 8px; }
-.w-top-btn:hover { color: var(--acc); }
+.w-top-btn:hover { color: var(--acc-text, var(--acc)); }
 .w-top-btn svg { width: 12px; height: 12px; }
 
 /* ============================ 转场遮罩 ============================ */
@@ -571,8 +560,8 @@ video.w-hero__media {
   transition: color 0.3s var(--e-out), background 0.3s var(--e-out);
 }
 .vctl__b svg { width: 15px; height: 15px; }
-.vctl__b:hover { color: var(--acc); }
-.vctl__b.is-off { color: var(--acc); }
+.vctl__b:hover { color: var(--acc-text, var(--acc)); }
+.vctl__b.is-off { color: var(--acc-text, var(--acc)); }
 
 .vctl__t {
   font-family: var(--font-mono);
