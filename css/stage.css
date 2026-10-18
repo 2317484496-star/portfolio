@@ -50,6 +50,10 @@
   .stage__inner.is-portrait > .w-hero {
     grid-column: 2; grid-row: 1;
     margin: 0 0 40px;
+    /* 必须给明确的宽度：auto 轨道按内容算，只会分到 264px 左右，
+       竖幅海报就永远长不大。这里按「高度配额 × 竖屏画幅」反推宽度，
+       同时不超过 24vw，宽屏上才不会把标题挤成一条。 */
+    width: min(24vw, calc(var(--hero-h) * 0.5611));
   }
   /* 并置版式里正文段落宽度已收窄，横排更耐读 */
   .stage__inner.is-portrait .w-logline { max-width: 46ch; }
@@ -193,13 +197,14 @@
 /* 竖屏：首屏改成「左标题 / 右竖幅海报」并置，海报可以占满一屏高度。
    高度配额同时受视口高度与可用宽度约束 —— 宽度那一项保证左侧标题列不被挤没。 */
 .w-hero.is-portrait {
-  --hero-h: clamp(320px, min(66vh, (100vw - 984px) * 1.7778), 720px);
+  /* 竖屏画框给得更足一些：9:16 的画面要靠高度撑，66vh 的上限让它显得偏小 */
+  --hero-h: clamp(340px, min(74vh, (100vw - 930px) * 1.7778), 800px);
 }
 
 /* 中间宽度：栏宽更紧，配额相应收紧，保证一屏看全 */
 @media (min-width: 1081px) and (max-width: 1280px) {
   .w-hero.is-portrait {
-    --hero-h: clamp(280px, min(56vh, (100vw - 874px) * 1.7778), 620px);
+    --hero-h: clamp(300px, min(64vh, (100vw - 862px) * 1.7778), 680px);
   }
 }
 
@@ -398,6 +403,8 @@ video.w-hero__media {
   transition: border-color 0.4s var(--e-out), transform 0.55s var(--e-out);
 }
 .shot--tall { aspect-ratio: 3 / 4; width: clamp(150px, 18vw, 210px); }
+/* 竖屏作品的剧照（9:16）：格子跟着素材走，不裁成横的 */
+.shot--vert { aspect-ratio: 9 / 16; width: clamp(132px, 15vw, 178px); }
 .shot img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s var(--e-out), filter 0.5s var(--e-out), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1); filter: saturate(0.86); }
 .shot:hover { border-color: rgba(var(--acc-rgb), 0.6); }
 .shot:hover img { transform: scale(1.06); filter: saturate(1.05); }

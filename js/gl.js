@@ -211,6 +211,12 @@
       this.acc = this.accTarget.slice();
       if (hex2) this.acc2 = this.acc2Target.slice();
     }
+    /* 关键：开了「减少动态效果」时背景是「画一帧就停」的冻结态，
+       frame() 里靠 _froze 挡住后续绘制。换色必须把这面旗子放倒，
+       否则新颜色永远画不出来 —— 症状就是「切作品背景不变，刷新才对」。
+       解冻后下一帧会用新色重画一张静态底图，也不会开始连续动效。 */
+    this._froze = false;
+    this.lastFrame = 0;
   };
   GL.prototype.setPointer = function (x, y) { this.ptrTarget[0] = x; this.ptrTarget[1] = y; };
   GL.prototype.pulse = function (v) { this.energyTarget = Math.max(this.energyTarget, v || 1); };

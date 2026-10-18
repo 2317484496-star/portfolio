@@ -330,15 +330,20 @@
     }
 
     /* 画框跟着素材真实比例走：16:9 的作品配 9:16 成片时，画框收成竖幅，
-       而不是把画面塞进比例不对的框里、上下留一大条黑边。 */
+       而不是把画面塞进比例不对的框里、上下留一大条黑边。
+       竖屏作品例外：它们统一用 data.js 里的 PORTRAIT_CSS，
+       不按各自视频的宽高现算 —— 否则每部作品的画框都会差一点点。 */
     function syncAspect() {
       var vw = v.videoWidth, vh = v.videoHeight;
       if (!vw || !vh) return;
-      frame.style.setProperty('--ar', vw + ' / ' + vh);
-      var fig = self.$('wHeroFig');
-      if (fig) {
-        fig.style.setProperty('--arw', String(vw));
-        fig.style.setProperty('--arh', String(vh));
+      var portraitWork = self.current && self.current.isPortrait;
+      if (!portraitWork) {
+        frame.style.setProperty('--ar', vw + ' / ' + vh);
+        var fig = self.$('wHeroFig');
+        if (fig) {
+          fig.style.setProperty('--arw', String(vw));
+          fig.style.setProperty('--arh', String(vh));
+        }
       }
       frame.classList.toggle('is-portrait', vw < vh);
       frame.classList.toggle('is-landscape', vw >= vh);
@@ -674,7 +679,8 @@
 
     /* 正文 */
     $('wSynopsis').innerHTML = w.synopsis.map(function (p) { return '<p>' + U.esc(p) + '</p>'; }).join('');
-    $('wNote').innerHTML = '<p>' + U.esc(w.note) + '</p>';
+    /* 「创作手记 / 分镜思路」区块已按用户要求整块下线（2026-10-19）。
+       data.js 里的 note 字段保留，将来要恢复只需把区块和这一行加回来。 */
 
     /* 事实表 */
     $('wFacts').innerHTML = w.facts.map(function (f) {
@@ -691,10 +697,13 @@
     }).join('');
     linksEl.hidden = !live.length;
 
-    /* 图集 */
+    /* 图集：默认横版格子；声明了 stillAspect 的作品（重生拒嫁）用竖版格子，
+       否则 9:16 的剧照会被塞进 16:9 的框里裁掉半张脸 */
+    var vertStills = w.stillAspect === '9:16';
     $('wGalleryRow').innerHTML = w.media.stills.map(function (s, i) {
-      var tall = i % 5 === 3;
-      return '<button class="shot' + (tall ? ' shot--tall' : '') + '" type="button" data-i="' + i + '" ' +
+      var tall = !vertStills && i % 5 === 3;
+      var cls = vertStills ? ' shot--vert' : (tall ? ' shot--tall' : '');
+      return '<button class="shot' + cls + '" type="button" data-i="' + i + '" ' +
         'aria-label="查看剧照 ' + (i + 1) + '：' + U.esc(s.cap) + '">' +
         '<span class="shot__n mono">' + ('0' + (i + 1)).slice(-2) + '</span>' +
         '<span class="shot__exp">' + ICO.expand + '</span>' +
@@ -714,16 +723,25 @@
         if (el.getAttribute('data-loaded')) return;
         el.setAttribute('data-loaded', '1');
         var tall = el.classList.contains('shot--tall');
+        var vert = el.classList.contains('shot--vert');
         var img = document.createElement('img');
         img.alt = w.title + ' 剧照 ' + (i + 1);
         img.loading = 'lazy';
         img.decoding = 'async';
-        U.img(img, w.media.stills[i].src, {
-          w: tall ? 1080 : 1280, h: tall ? 1440 : 720, dw: 1280,
-          sizes: '(max-width: 860px) 78vw, 520px',
+        var opt = {
           n: w.n, title: w.title, acc: w.accent, acc2: w.accent2,
           kind: 'STILL ' + ('0' + (i + 1)).slice(-2), path: w.media.stills[i].src
-        });
+        };
+        if (vert) {
+          opt.w = 1080; opt.h = 1920; opt.dw = 1080;
+          opt.sizes = '(max-width: 860px) 44vw, 210px';
+        } else {
+          opt.w = tall ? 1080 : 1280;
+          opt.h = tall ? 1440 : 720;
+          opt.dw = 1280;
+          opt.sizes = '(max-width: 860px) 78vw, 520px';
+        }
+        U.img(img, w.media.stills[i].src, opt);
         el.insertBefore(img, el.firstChild);
       });
     }
@@ -922,9 +940,9 @@
   Stage.prototype.preload = function (w) {
     if (!w || w === this._warm) return;
     this._warm = w;
-    U.preload(w.media.hero);
+    /* 半尺寸就够：画位宽度不到 900px，全尺寸那张只会在 DPR≥2 时才被选中 */
+    U.preload(w.media.hero, true);
     if (w.media.poster) U.preload(w.media.poster);
-    U.preload(w.media.cover);
   };
 
   /* -------------------------------------------------------------- 灯箱数据 */

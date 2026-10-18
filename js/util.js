@@ -569,10 +569,13 @@
       if (half && dw > 0) {
         node.srcset = half + ' ' + Math.round(dw / 2) + 'w, ' + full + ' ' + dw + 'w';
         node.sizes = o.sizes || '100vw';
+        /* src 与 srcset 的最小候选对齐：DPR1 时浏览器选的正是这张，
+           预加载过的话就能直接命中，而不是按 src 再下一张全尺寸 */
+        node.src = half;
       } else {
         node.removeAttribute('srcset');
+        node.src = full;
       }
-      node.src = full;
     } else {
       node.removeAttribute('srcset');
       node.removeAttribute('sizes');
@@ -603,9 +606,9 @@
      提交时换图即为瞬时，不会出现「先空后满」。
      预热的是**实际会用的那份 webp**（原尺寸），不是原 jpg ——
      否则同一张图会被下两遍，预热反而变成负担。 */
-  U.preload = function (src) {
+  U.preload = function (src, half) {
     if (!src) return;
-    var webp = U.webpOf(src, false);
+    var webp = U.webpOf(src, !!half);
     var key = webp || src;
     if (U._missing[src] || U._seen[key]) return;
     U._seen[key] = 1;

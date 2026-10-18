@@ -231,7 +231,8 @@
       dirs.forEach(function (d) {
         var w = self.works[(self.cur + d + n) % n];
         if (!w) return;
-        U.preload(w.media.hero);
+        /* 只预取半尺寸那一档：画位一般不超过 900px，全尺寸是浪费 */
+        U.preload(w.media.hero, true);
         U.coverBg(w);
       });
     });
@@ -346,7 +347,7 @@
       var n = self.works.length;
       [1, -1].forEach(function (d) {
         var w = self.works[(i + d + n) % n];
-        if (w) U.preload(w.media.hero);
+        if (w) U.preload(w.media.hero, true);
       });
     }, 700);
   };

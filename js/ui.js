@@ -90,8 +90,19 @@
       U.$('#lbClose').addEventListener('click', function () { self.close(); });
       U.$('#lbPrev').addEventListener('click', function () { self.go(-1); });
       U.$('#lbNext').addEventListener('click', function () { self.go(1); });
-      this.img.addEventListener('click', function () { self.img.classList.toggle('is-zoom'); });
-      this.el.addEventListener('click', function (e) { if (e.target === self.el) self.close(); });
+      this.img.addEventListener('click', function () {
+        self.img.classList.toggle('is-zoom');
+        self.el.classList.toggle('is-zoomed');
+      });
+
+      /* 关闭区：画面以外的任何地方都算背景。
+         以前只认「正好点在 #lightbox 上」，而灯箱的图片区几乎铺满屏幕，
+         点在图片旁边的深色留白里 e.target 是 .lb__stage，就被当成没点中 ——
+         这就是「点剧照其他位置退不出去」的原因。 */
+      this.el.addEventListener('click', function (e) {
+        if (e.target.closest('.lb__img, .lb__thumbs, .lb__bar, .ov__close')) return;
+        self.close();
+      });
 
       this.thumbs.addEventListener('click', function (e) {
         var b = e.target.closest('button[data-i]');
@@ -111,12 +122,14 @@
         if (Math.abs(dx) > 54 && Math.abs(dx) > Math.abs(dy) * 1.4) self.go(dx < 0 ? 1 : -1);
       });
 
-      document.addEventListener('keydown', function (e) {
+      /* Esc 关闭：capture 阶段先接一手，避免被别的键盘处理或浏览器吃掉第一下。
+         另外把监听挂在 window 上（document 只在页面有焦点时收得到）。 */
+      window.addEventListener('keydown', function (e) {
         if (!self.el.classList.contains('is-open')) return;
-        if (e.key === 'Escape') self.close();
-        else if (e.key === 'ArrowRight') self.go(1);
-        else if (e.key === 'ArrowLeft') self.go(-1);
-      });
+        if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); e.stopPropagation(); self.close(); return; }
+        if (e.key === 'ArrowRight') { e.preventDefault(); self.go(1); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); self.go(-1); }
+      }, true);
     },
 
     open: function (items, i) {
@@ -126,10 +139,15 @@
       this.thumbs.innerHTML = this.items.map(function (it, k) {
         return '<button type="button" data-i="' + k + '"><img alt="" src="' + it.src + '"></button>';
       }).join('');
+      this.img.classList.remove('is-zoom');
       this.show(i || 0);
       this.el.classList.add('is-open');
       this.el.setAttribute('aria-hidden', 'false');
       document.body.classList.add('ov-open');
+      /* 焦点搬进灯箱：键盘从头就能用（Esc / ← →），
+         也让「刚打开时按键没反应」这类问题不再出现 */
+      var closeBtn = U.$('#lbClose');
+      if (closeBtn) { try { closeBtn.focus({ preventScroll: true }); } catch (e) {} }
     },
 
     show: function (i) {
@@ -149,9 +167,10 @@
     go: function (d) { this.show(this.i + d); },
 
     close: function () {
-      this.el.classList.remove('is-open');
+      this.el.classList.remove('is-open', 'is-zoomed');
       this.el.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('ov-open');
+      if (this.img) this.img.classList.remove('is-zoom');
       restoreFocus();
     },
 
@@ -304,7 +323,7 @@
       var o = site.owner;
 
       U.$('#aboutLead').textContent =
-        '尹航 · ' + (o.role || '执行导演') + '，现就职于' + (o.company || '与光同尘（杭州）文化科技') + '。' +
+        '尹航 · ' + (o.role || '执行导演') + '，曾就职于' + (o.company || '与光同尘（杭州）文化科技') + '。' +
         '主导 3 部 AI 漫剧短剧的主要制作，参与 3 部作品的剧本与导演层面的修改优化，作品均上线' +
         (o.platform || '红果免费漫剧平台') + '。这个站点收录了 ' + works.length + ' 部作品的分镜、视觉设定与成片。';
 
@@ -346,16 +365,15 @@
         }).join('');
       }
 
+      /* 联系方式：不放公司（已离职）与 GitHub —— 只留能直接联系到人的信息 */
       U.$('#aboutContact').innerHTML =
         row('姓名 / NAME', o.name) +
         row('身份 / ROLE', o.role) +
-        row('公司 / COMPANY', o.company) +
+        row('状态 / STATUS', o.status || '已离职 · 开放新机会') +
         row('城市 / CITY', o.city) +
         row('电话 / TEL', o.phone) +
         row('邮箱 / EMAIL', o.email) +
-        row('学校 / SCHOOL', o.school) +
-        '<a href="' + U.esc(o.github) + '" target="_blank" rel="noopener"><span>GitHub</span><span>' +
-          U.esc(o.github.replace('https://', '')) + ' ' + ICO.out + '</span></a>';
+        row('学校 / SCHOOL', o.school);
 
       function row(k, v) {
         return '<div><span>' + U.esc(k) + '</span><span>' + U.esc(v) + '</span></div>';
@@ -525,15 +543,23 @@
       ];
 
       var t0 = performance.now();
-      var dur = U.reduced() ? 220 : 1500;
+      var dur = U.reduced() ? 220 : 900;
 
       function finish() {
         if (done) return;
         done = true;
+        if (early) clearInterval(early);
         el.classList.add('is-done');
         setTimeout(function () { el.style.display = 'none'; }, 700);
         onDone && onDone();
       }
+
+      /* 主视觉一到位就提前收场：加载页是仪式感，不该让人等它走完进度条。
+         最少留 420ms，否则动画还没看清就被切走，反而像闪了一下。 */
+      var early = setInterval(function () {
+        var img = document.querySelector('#wHeroFrame img.w-hero__media');
+        if (img && img.complete && img.naturalWidth && performance.now() - t0 > 420) finish();
+      }, 120);
 
       el.addEventListener('click', finish);
       document.addEventListener('keydown', function once(e) {
