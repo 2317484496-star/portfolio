@@ -65,15 +65,13 @@
     var ft = document.getElementById('footTotal');
     if (ft) ft.textContent = ('0' + total).slice(-2);
 
-    /* 封面：先给占位，探测到真实素材再替换 */
+    /* 封面：全站先只挂程序化占位，真实封面按需解析（见 U.coverBg）。
+       以前这里给 11 部逐一 probe 封面，等于首屏先下 11 张 300KB 的图，
+       新机器第一次打开要等好几秒才见到画面 —— 而首屏真正用得到的只有 1 张。 */
     this.works.forEach(function (w) {
       w._cover = U.ph({
         w: 900, h: 1200, n: w.n, title: w.title, acc: w.accent, acc2: w.accent2,
         kind: 'COVER / 3:4', path: w.dir + '/cover.jpg'
-      });
-      U.probe(w.media.cover, function () {
-        w._cover = w.media.cover;
-        if (self.wheel && self.works[self.wheel.index] === w) { self.wheel._painted = -1; self.wheel._render(); }
       });
     });
 
@@ -112,7 +110,6 @@
       onShot: function (i) { self.openLightbox(i); },
       onNext: function () { self.step(1); },
       onPrev: function () { self.step(-1); },
-      onCopy: function () { self.copyLink(); },
       onToast: function (m) { WB.UI.toast(m); },
       onScroll: function (p) { self.gl && self.gl.setScroll(p * 0.6); }
     });
@@ -219,30 +216,34 @@
     this.stage.animateIn();
     if (this.gl) this.gl.pulse(0.5);
     setTimeout(function () { if (self.gl) self.gl.pulse(0.35); }, 700);
+
+    /* 空闲时预热相邻作品的主视觉。
+       切作品的等待感几乎全来自「主视觉还没到」，而浏览方向大概率是下一部；
+       放在 idle 里做，不抢首屏带宽。省流量 / 弱网只预热一部，
+       4G 以上才顺手把上一部也备好。 */
+    var c = navigator.connection || {};
+    if (c.saveData) return;
+    var fast = !c.effectiveType || /3g|4g/.test(c.effectiveType);
+    var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 1600); };
+    idle(function () {
+      var n = self.works.length;
+      var dirs = fast ? [1, -1] : [1];
+      dirs.forEach(function (d) {
+        var w = self.works[(self.cur + d + n) % n];
+        if (!w) return;
+        U.preload(w.media.hero);
+        U.coverBg(w);
+      });
+    });
   };
 
   /* ============================================================== 强调色渐变 */
+  /* 换色走 U.tweenAccent：逐帧插值 + 超时无条件落最终值。
+     —— 为什么不在 commit 里直接写死：写成瞬间换色也行，但整站颜色是仪表盘的
+        一部分，硬切会显得像刷新；渐变又必须保证「一定到得了终点」，
+        所以最终值由 setTimeout 兜底写入，不依赖 rAF 是否还在跑。 */
   App.tweenAccent = function (acc, acc2, dur) {
-    var root = document.documentElement;
-    var from = [
-      U.hex2rgb(getComputedStyle(root).getPropertyValue('--acc').trim() || acc),
-      U.hex2rgb(getComputedStyle(root).getPropertyValue('--acc-2').trim() || acc2)
-    ];
-    var to = [U.hex2rgb(acc), U.hex2rgb(acc2)];
-    var same = from[0].join() === to[0].join();
-    if (U.reduced() || same) { U.applyAccent(acc, acc2); return; }
-
-    if (this.accentAnim) cancelAnimationFrame(this.accentAnim);
-    var t0 = performance.now(), d = dur || 620;
-    (function tick(now) {
-      var p = U.clamp((now - t0) / d, 0, 1);
-      var e = U.easeOutQuint(p);
-      var a = U.rgb2hex([U.lerp(from[0][0], to[0][0], e), U.lerp(from[0][1], to[0][1], e), U.lerp(from[0][2], to[0][2], e)]);
-      var b = U.rgb2hex([U.lerp(from[1][0], to[1][0], e), U.lerp(from[1][1], to[1][1], e), U.lerp(from[1][2], to[1][2], e)]);
-      U.applyAccent(a, b);
-      if (p < 1) App.accentAnim = requestAnimationFrame(tick);
-      else { U.applyAccent(acc, acc2); App.accentAnim = null; }
-    })(t0);
+    U.tweenAccent(acc, acc2, dur || 520);
   };
 
   /* ============================================================== 预览 / 提交 */
@@ -333,6 +334,21 @@
     }
 
     this.stage.transitionTo(w, i, this.works.length);
+    this._warmNeighbors(i);
+  };
+
+  /* 停稳 0.7s 后预热前后两部的主视觉：连点时会被下一次 commit 取消，
+     不会因为手快就把一串图排进下载队列。 */
+  App._warmNeighbors = function (i) {
+    var self = this;
+    clearTimeout(this._warmT);
+    this._warmT = setTimeout(function () {
+      var n = self.works.length;
+      [1, -1].forEach(function (d) {
+        var w = self.works[(i + d + n) % n];
+        if (w) U.preload(w.media.hero);
+      });
+    }, 700);
   };
 
   /* 显式跳转（列表 / 走马灯 / 上下部 / 深链） */
@@ -367,8 +383,11 @@
       return '<span>' + U.esc(t) + '</span>';
     }).join('');
     var img = el.querySelector('.peek__thumb');
-    U.img(img, w._cover || w.media.cover, {
-      w: 300, h: 400, n: w.n, title: w.title, acc: w.accent, acc2: w.accent2, kind: 'COVER', path: w.dir + '/cover.jpg'
+    /* 直接给原图地址：U.img 自己会挑 webp 变体、失败退回 jpg、再失败挂占位，
+       比先等「封面探测结果」快一步（探测结果只服务于轮盘中枢的背景）。 */
+    U.img(img, w.media.cover, {
+      w: 900, h: 1200, sizes: '260px', n: w.n, title: w.title, acc: w.accent, acc2: w.accent2,
+      kind: 'COVER', path: w.dir + '/cover.jpg'
     });
     el.style.setProperty('--acc', w.accent);
     el.style.setProperty('--acc-rgb', U.rgbStr(U.hex2rgb(w.accent)));
@@ -396,11 +415,14 @@
   App.openLightbox = function (i) {
     var cur = this.stage.current;
     if (!cur) return;
-    /* 直接沿用画廊里已经解析好的 src（含占位兜底），避免灯箱出现裂图 */
+    /* 直接沿用画廊里已经解析好的 src（含占位兜底），避免灯箱出现裂图。
+       剧照区还没被水合时，退回同尺寸 webp —— 比原 jpg 小一半以上。 */
     var imgs = U.$$('#wGalleryRow .shot img');
     var data = cur.media.stills.map(function (s, k) {
       var el = imgs[k];
-      var src = (el && (el.currentSrc || el.getAttribute('src'))) || s.src;
+      var mounted = el && (el.currentSrc || el.getAttribute('src'));
+      if (mounted && mounted.indexOf('data:') === 0) mounted = null;
+      var src = mounted || U.webpOf(s.src, false) || s.src;
       return { src: src, cap: s.cap, n: ('0' + (k + 1)).slice(-2), w: cur };
     });
     WB.UI.Lightbox.open(data, i);
@@ -430,10 +452,10 @@
     var og = abs('assets/og.png');
     setMeta('og:image', og);
     setMeta('og:url', origin);
-    setMeta('og:image:alt', '作品集封面：十部作品，十条不同的镜头语言');
+    setMeta('og:image:alt', '作品集封面');
     setMeta('twitter:image', og, 'name');
-    setMeta('twitter:title', site.cjk + ' · 十部作品，十条不同的镜头语言', 'name');
-    setMeta('twitter:description', '10 部 AI 短剧的分镜设计、视觉设定与生成过程。', 'name');
+    setMeta('twitter:title', site.cjk + ' · 每部作品，一条不同的镜头语言', 'name');
+    setMeta('twitter:description', 'AI 短剧与 AI 漫剧的分镜设计、视觉设定与生成过程。', 'name');
     var canon = document.querySelector('link[rel="canonical"]');
     if (canon) canon.href = origin;
 
@@ -589,7 +611,6 @@
 
       if (k === 'l' || k === 'L') { e.preventDefault(); WB.UI.ListView.toggle(self.cur); }
       else if (k === 'a' || k === 'A') { e.preventDefault(); WB.UI.About.toggle(); }
-      else if (k === 'c' || k === 'C') { e.preventDefault(); self.copyLink(); }
       else if (k === 'f' || k === 'F') {
         e.preventDefault();
         if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
@@ -599,20 +620,6 @@
         WB.UI.Keys.toggle();
       }
     });
-  };
-
-  /* ============================================================== 复制链接 */
-  App.copyLink = function () {
-    var w = this.works[this.cur];
-    if (!w) return;
-    var url = location.origin + location.pathname + '#' + w.id;
-    WB.UI.copyText(url, '已复制「' + w.title + '」的链接');
-    var b = document.getElementById('wCopy');
-    if (b) {
-      b.classList.add('is-ok');
-      clearTimeout(this._copyTimer);
-      this._copyTimer = setTimeout(function () { b.classList.remove('is-ok'); }, 1600);
-    }
   };
 
   /* ============================================================ 网络状态提示 */

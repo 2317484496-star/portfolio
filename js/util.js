@@ -126,6 +126,98 @@
     if (meta) meta.setAttribute('content', '#030409');
   };
 
+  /* 读到当前生效的强调色（内联优先，其次计算值） */
+  U.currentAccent = function () {
+    var inline = document.documentElement.style.getPropertyValue('--acc');
+    var v = inline || getComputedStyle(document.documentElement).getPropertyValue('--acc');
+    v = String(v || '').trim();
+    return /^#[0-9a-f]{3,8}$/i.test(v) ? v : '#FF3D8B';
+  };
+
+  /* 换色：逐帧插值 + 兜底落值。
+     —— 为什么不用 CSS transition：@property 的过渡在个别环境里会卡在中途或
+        干脆不触发，症状是「切了作品颜色不变，刷新后才对」。刷新之所以"修好"，
+        是因为重新加载时首屏直接按新值绘制，从不经过过渡。
+     —— 为什么不用纯 rAF：标签页被节流、内嵌预览、省电模式下 rAF 会停，
+        颜色就冻在中间值。所以这里除了 rAF 还把「最终值」挂在一个 setTimeout
+        上无条件写入：动画可以掉帧，结果不允许错。 */
+  U.tweenAccent = function (acc, acc2, dur) {
+    var root = document.documentElement;
+    var t0 = performance.now();
+    var total = Math.max(120, dur || 520);
+    var from = U.currentAccent();
+    var from2 = U.currentAccent2();
+    var to = acc || from;
+    var to2 = acc2 || from2;
+    var raf = 0, timer = 0, done = false;
+
+    function write(a, b) {
+      root.style.setProperty('--acc', a);
+      root.style.setProperty('--acc-rgb', U.rgbStr(U.hex2rgb(a)));
+      root.style.setProperty('--acc-2', b);
+      root.style.setProperty('--acc-2-rgb', U.rgbStr(U.hex2rgb(b)));
+    }
+
+    function finish() {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+      write(to, to2);                    /* 最终值：无条件落地 */
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#030409');
+    }
+
+    /* 减少动效 / 颜色没变：不做渐变，直接落值 */
+    if (U.reduced() || from === to) { write(to, to2); return; }
+
+    function step(now) {
+      var p = U.clamp((now - t0) / total, 0, 1);
+      var e = U.easeOutQuint(p);
+      write(U.mix(from, to, e), U.mix(from2, to2, e));
+      if (p < 1) raf = requestAnimationFrame(step);
+      else finish();
+    }
+    raf = requestAnimationFrame(step);
+    /* 硬兜底：rAF 一帧都没走也能在 total 之后落值 */
+    timer = setTimeout(finish, total + 90);
+  };
+
+  U.currentAccent2 = function () {
+    var inline = document.documentElement.style.getPropertyValue('--acc-2');
+    var v = inline || getComputedStyle(document.documentElement).getPropertyValue('--acc-2');
+    v = String(v || '').trim();
+    return /^#[0-9a-f]{3,8}$/i.test(v) ? v : '#8B5CF6';
+  };
+
+  /* -------------------------------------------------------------- webp 变体 */
+  /* 同一张图在仓库里有三份：原 jpg、同尺寸 webp、半尺寸 webp。
+     主视觉原图动辄 1MB（q90），webp q80 约为 38%，半尺寸再砍一半 ——
+     手机上没必要为一张 900px 宽的画位下 1440px 的图。 */
+  U.webpOK = (function () {
+    try {
+      var c = document.createElement('canvas');
+      c.width = c.height = 1;
+      return c.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+    } catch (e) { return false; }
+  })();
+
+  U.isJpg = function (src) { return /\.jpe?g(\?.*)?$/i.test(String(src || '')); };
+
+  /* 取同款 webp 地址；half=true 取半尺寸。非 jpg / 浏览器不支持时返回 null */
+  U.webpOf = function (src, half) {
+    if (!U.webpOK || !U.isJpg(src)) return null;
+    return String(src).replace(/\.jpe?g(\?.*)?$/i, (half ? '-h' : '') + '.webp$1');
+  };
+
+  /* 背景图用（轮盘中枢）：只要确定原图存在，就换成半尺寸 webp */
+  U.bgUrl = function (src) {
+    if (!src) return src;
+    var w = U.webpOf(src, true) || U.webpOf(src, false);
+    return w || src;
+  };
+
+
   /* ------------------------------------------------------------------ 文本 */
   /* 把文本拆成<span class="ch">，返回数组；保留原有换行语义 */
   U.splitChars = function (el) {
@@ -419,12 +511,14 @@
     if (fail) e.fail.push(fail);
   }
 
-  /* 给 <img> 绑定兜底：加载失败时挂上程序化占位图；
+  /* 给 <img> 绑定兜底：优先 webp（同尺寸 + 半尺寸 srcset），
+     webp 不可用或缺失时退回原 jpg，最后才挂程序化占位图；
      并在解码完成前保持透明，避免切作品时先闪一帧空底再「啪」地跳出图。
      过渡由各元素样式表里的 transition 列表负责（都已含 opacity），
      JS 只切内联值 —— 这里若用 getComputedStyle 读原有过渡链，会在插图的
      那一刻强制同步样式重算，切作品一次就是七次，反而制造抖动。 */
   U.img = function (node, src, phOpts) {
+    var o = phOpts || {};
     var settled = false;
     var show = function () {
       if (settled) return;
@@ -435,19 +529,56 @@
 
     /* 已知不存在的地址直接走占位图：切回这部作品时不再白跑一次网络往返 */
     if (U._missing[src]) {
-      node.src = U.ph(phOpts || {});
+      node.removeAttribute('srcset');
+      node.removeAttribute('sizes');
+      node.src = U.ph(o);
       show();
       return node;
     }
     U._seen[src] = 1;
 
-    node.addEventListener('error', function onerr() {
-      node.removeEventListener('error', onerr);
+    var full = U.webpOf(src, false);
+    var half = U.webpOf(src, true);
+    /* 0 = webp 全尺寸（带 srcset），1 = 原 jpg，2 = 占位图 */
+    var step = full ? 0 : 1;
+
+    function onerr() {
+      if (step === 0) {
+        step = 1;
+        node.removeAttribute('srcset');
+        node.removeAttribute('sizes');
+        node.addEventListener('error', onerr);
+        node.src = src;
+        if (node.complete && node.naturalWidth) { show(); U._markLoaded(src); }
+        return;
+      }
       U._markMissing(src);
-      node.src = U.ph(phOpts || {});
-    });
+      node.removeAttribute('srcset');
+      node.removeAttribute('sizes');
+      node.src = U.ph(o);
+    }
+    node.addEventListener('error', onerr);
+
     node.addEventListener('load', function () { show(); U._markLoaded(src); });
-    node.src = src;
+
+    if (step === 0) {
+      /* o.w / o.h 是这一格声明的素材尺寸（data.js 的画幅），
+         半尺寸变体正好是一半宽，descriptor 才不会算错密度。
+         o.dw 用于「画位比例与素材比例不一致」的格子（竖版剧照位）。 */
+      var dw = (o.dw || o.w) | 0;
+      if (half && dw > 0) {
+        node.srcset = half + ' ' + Math.round(dw / 2) + 'w, ' + full + ' ' + dw + 'w';
+        node.sizes = o.sizes || '100vw';
+      } else {
+        node.removeAttribute('srcset');
+      }
+      node.src = full;
+    } else {
+      node.removeAttribute('srcset');
+      node.removeAttribute('sizes');
+      node.src = src;
+    }
+
     /* 命中缓存时 load 可能已经错过，用 complete 兜底；
        再留一个硬兜底，任何异常都不会让图永久隐形。 */
     if (node.complete && node.naturalWidth) { show(); U._markLoaded(src); }
@@ -469,16 +600,55 @@
   };
 
   /* 预热：在轮盘转到某部作品时就把它的主视觉解码好，
-     提交时换图即为瞬时，不会出现「先空后满」。 */
+     提交时换图即为瞬时，不会出现「先空后满」。
+     预热的是**实际会用的那份 webp**（原尺寸），不是原 jpg ——
+     否则同一张图会被下两遍，预热反而变成负担。 */
   U.preload = function (src) {
-    if (!src || U._missing[src] || U._seen[src]) return;
-    U._seen[src] = 1;
+    if (!src) return;
+    var webp = U.webpOf(src, false);
+    var key = webp || src;
+    if (U._missing[src] || U._seen[key]) return;
+    U._seen[key] = 1;
     var i = new Image();
     i.decoding = 'async';
-    i.onload = function () { U._markLoaded(src); };
-    i.onerror = function () { U._markMissing(src); };
-    i.src = src;
+    i.onerror = function () { delete U._seen[key]; };
+    i.src = key;
     if (i.decode) i.decode().catch(function () {});
+  };
+
+  /* 在一组候选地址里取第一个真实存在的（webp → jpg 的顺序由调用方给）。
+     命中的那张会进浏览器图片缓存，紧接着当背景图用不会二次下载。 */
+  U.resolveSrc = function (list, cb) {
+    var i = 0;
+    (function next() {
+      if (i >= list.length) { cb(null); return; }
+      var s = list[i++];
+      if (U._missing[s]) { next(); return; }
+      var img = new Image();
+      img.onload = function () { cb(s); };
+      img.onerror = function () { next(); };
+      img.src = s;
+    })();
+  };
+
+  /* 轮盘中枢的封面：按需解析（首屏不再预探测 11 张封面），
+     解析成功后写进 w._hubBg，同一部作品只算一次。 */
+  U.coverBg = function (w, cb) {
+    if (!w || !w.media) { cb && cb(null); return; }
+    if (w._hubBg !== undefined) { cb && cb(w._hubBg); return; }
+    if (w._hubWait) { if (cb) w._hubWait.push(cb); return; }
+    w._hubWait = cb ? [cb] : [];
+    var cands = [U.webpOf(w.media.cover, true), U.webpOf(w.media.cover, false), w.media.cover];
+    var list = [];
+    for (var i = 0; i < cands.length; i++) {
+      if (cands[i] && list.indexOf(cands[i]) < 0) list.push(cands[i]);
+    }
+    U.resolveSrc(list, function (url) {
+      w._hubBg = url || null;
+      var q = w._hubWait || [];
+      w._hubWait = null;
+      for (var k = 0; k < q.length; k++) q[k](w._hubBg);
+    });
   };
 
   WB.U = U;

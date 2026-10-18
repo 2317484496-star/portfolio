@@ -472,8 +472,17 @@
     if (this.hubNum) this.hubNum.textContent = w.n;
     if (this.hubGenre) this.hubGenre.textContent = w.group;
     if (this.hubMedia) {
-      var src = w._cover || w.media.cover;
-      this.hubMedia.style.backgroundImage = 'url("' + src + '")';
+      var self = this;
+      var idx = this.index;
+      var hb = this.hubMedia;
+      /* 先挂占位（同步、零请求），真实封面按需解析到位后再替换。
+         轮盘中枢是一枚 180px 的小圆，不需要为它下整张封面 ——
+         U.coverBg 优先解析 450px 的半尺寸 webp。 */
+      hb.style.backgroundImage = 'url("' + (w._cover || w.media.cover) + '")';
+      U.coverBg(w, function (url) {
+        if (!url || self.index !== idx) return;
+        hb.style.backgroundImage = 'url("' + url + '")';
+      });
     }
     if (this.readNum) this.readNum.textContent = w.n + ' / ' + ('0' + this.n).slice(-2);
     if (this.readTitle) this.readTitle.textContent = w.title;

@@ -191,15 +191,10 @@
         '</button>';
       }).join('');
 
-      /* 封面兜底 */
-      U.$$('.lv-card', this.grid).forEach(function (card) {
-        var w = works[+card.getAttribute('data-i')];
-        var img = card.querySelector('img');
-        U.img(img, w.media.cover, {
-          w: 900, h: 1200, n: w.n, title: w.title, acc: w.accent, acc2: w.accent2,
-          kind: 'COVER / 3:4', path: w.dir + '/cover.jpg'
-        });
-      });
+      /* 封面兜底：只在面板第一次打开时挂图。
+         列表是覆盖层，首屏根本看不见它 —— 开机就把 11 张封面的 <img> 填上，
+         会让第一次进站的人陪着下几 MB 的图。 */
+      this.hydrated = false;
 
       this.grid.addEventListener('click', function (e) {
         var c = e.target.closest('.lv-card');
@@ -228,6 +223,7 @@
 
     open: function (focusIdx) {
       rememberFocus();
+      this.hydrate();
       this.el.classList.add('is-open');
       this.el.setAttribute('aria-hidden', 'false');
       document.body.classList.add('ov-open');
@@ -236,6 +232,23 @@
       /* 标记当前作品（而不是用焦点环，避免误导成「选中」） */
       var cards = U.$$('.lv-card', this.grid);
       for (var k = 0; k < cards.length; k++) cards[k].classList.toggle('is-current', k === focusIdx);
+    },
+
+    /* 首次打开时才真正请求封面 */
+    hydrate: function () {
+      if (this.hydrated) return;
+      this.hydrated = true;
+      var works = this.works;
+      U.$$('.lv-card', this.grid).forEach(function (card) {
+        var w = works[+card.getAttribute('data-i')];
+        var img = card.querySelector('img');
+        if (!w || !img) return;
+        U.img(img, w.media.cover, {
+          w: 900, h: 1200, sizes: '(max-width: 640px) 46vw, 320px',
+          n: w.n, title: w.title, acc: w.accent, acc2: w.accent2,
+          kind: 'COVER / 3:4', path: w.dir + '/cover.jpg'
+        });
+      });
     },
 
     close: function () {
@@ -327,8 +340,7 @@
           { k: '轮盘', v: '点击 / 拖拽 / ↑↓' },
           { k: '直达', v: '数字键 1 – 0' },
           { k: '列表视图', v: 'L' },
-          { k: '全屏', v: 'F' },
-          { k: '复制链接', v: 'C' }
+          { k: '全屏', v: 'F' }
         ].map(function (r) {
           return '<div><span>' + U.esc(r.k) + '</span><span>' + U.esc(r.v) + '</span></div>';
         }).join('');
@@ -568,25 +580,6 @@
     liveTimer = setTimeout(function () { el.textContent = msg; }, 60);
   }
 
-  /* ================================================================= 复制 */
-  function copyText(text, okMsg) {
-    function done() { toast(okMsg || '已复制到剪贴板'); }
-    function fallback() {
-      var ta = U.$('#clipFallback');
-      if (!ta) return;
-      ta.value = text;
-      ta.removeAttribute('aria-hidden');
-      ta.select();
-      try { document.execCommand('copy'); done(); }
-      catch (e) { toast('复制失败，请手动复制地址栏链接'); }
-      ta.setAttribute('aria-hidden', 'true');
-      ta.blur();
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done, fallback);
-    } else fallback();
-  }
-
   WB.UI = {
     Cursor: Cursor,
     Lightbox: Lightbox,
@@ -595,7 +588,6 @@
     Keys: Keys,
     toast: toast,
     announce: announce,
-    copyText: copyText,
     Preloader: Preloader
   };
 
