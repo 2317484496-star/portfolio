@@ -90,6 +90,21 @@ node ../tools/serve.mjs 8099
 
 ---
 
+## 方式 C：只有 api.github.com 通、`git push` 走不通时
+
+有些网络环境（公司代理、部分云开发环境）只放行 `api.github.com`，
+连 `github.com:443` 会卡在 `CONNECT tunnel 502`。这时用 Git Data API 推送：
+
+```bash
+python tools/push-api.py <你的 GitHub Token> "提交说明"
+```
+
+它不依赖本地 git 历史：拉远端最新 tree → 每个文件算 blob 哈希比对 →
+只上传真正变了的文件 → 建树 → 建 commit → 移动 main。重复运行是幂等的
+（内容一致就直接退出），所以可以当作「同步一下」随手用。
+
+---
+
 ## 需要注意的两件事
 
 1. **每一层的真实素材检测都是惰性的**：某个文件缺失只会退化成占位视觉，
