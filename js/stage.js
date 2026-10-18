@@ -157,7 +157,8 @@
     /* 不循环：一轮放完就停，要不要再看交给用户 */
     v.loop = false;
     v.preload = 'auto';
-    v.poster = w.media.poster;
+    /* 封帧也用 webp：点播放后到第一帧之间显示的就是它，越小越快有画面 */
+    v.poster = U.webpOf(w.media.poster, false) || w.media.poster;
 
     function bail(msg) {
       v.remove();
