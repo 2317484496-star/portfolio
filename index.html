@@ -2,6 +2,21 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<script>
+/* ---------------------------------------------------------------- 分流
+   github.io 在国内实测只有 10–40 KB/s，二十几兆的成片要拉半小时，
+   表现就是「点了半天没反应、开始播了还一卡一卡」。同一个包放到国内
+   托管能到 10 MB/s，差三个数量级。
+
+   所以不搬站、也不维护两份文件：同一份页面，落在 github.io 上就把人
+   送到国内站去；其他任何地方（本地预览、国内域名）都照原样打开。
+   想留在 GitHub 这一份看：地址后面加 ?stay=1。 */
+(function () {
+  if (!/(^|\.)github\.io$/i.test(location.hostname)) return;
+  if (/[?&]stay=1(?:&|$)/.test(location.search)) return;
+  location.replace('https://storyboard-portfolio-10922.app.workbuddy.host/?sharecode=D4R4DK3QQ6');
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>作品集 · SELECTED WORKS</title>
 <meta name="description" content="AI 影像作品集：短剧与漫剧的分镜设计、视觉设定与生成过程。分镜设计 / 提示词工程 / AI 影像生成 / 视觉风格设定 / 音效叙事。右侧轮盘浏览。">
