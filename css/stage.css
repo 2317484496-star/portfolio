@@ -607,11 +607,50 @@ video.w-hero__media {
   box-shadow: 0 0 0 4px rgba(var(--acc-rgb), 0.65);
 }
 
+/* 音量滑杆：比进度条短，只用来在「听清」和「不吵」之间找位置。
+   left 留白是必要的分隔 —— 两条都是细线，挨着放会被看成同一根进度条。
+   高度给到 26px：视觉上仍是 3px 细线，但手指按得中。 */
+.vctl__vol {
+  appearance: none; -webkit-appearance: none;
+  flex: none; width: 68px;
+  height: 26px; margin: 0 0 0 8px;
+  background: transparent; cursor: pointer;
+  --p: 60%;
+}
+/* 轨道 2px 比进度条的 3px 细一档：一眼能认出「细的那根是音量」 */
+.vctl__vol::-webkit-slider-runnable-track {
+  height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--acc) var(--p, 60%), rgba(255,255,255,0.22) var(--p, 60%));
+}
+.vctl__vol::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 9px; height: 9px; margin-top: -3.5px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(var(--acc-rgb), 0.35);
+  transition: transform 0.2s var(--e-out);
+}
+.vctl__vol:hover::-webkit-slider-thumb { transform: scale(1.2); }
+.vctl__vol::-moz-range-track {
+  height: 2px; border-radius: 2px; background: rgba(255,255,255,0.22);
+}
+.vctl__vol::-moz-range-progress {
+  height: 2px; border-radius: 2px; background: var(--acc);
+}
+.vctl__vol::-moz-range-thumb {
+  width: 9px; height: 9px; border: 0; border-radius: 50%; background: #fff;
+}
+.vctl__vol:focus-visible { outline: none; }
+.vctl__vol:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(var(--acc-rgb), 0.65);
+}
+/* iOS 上 <video>.volume 只读，这条滑杆拖了也不会有反应，索性不摆 */
+.vctl.is-novol .vctl__vol { display: none; }
+.vctl.is-loading .vctl__vol { opacity: 0.4; pointer-events: none; }
+
 /* 竖幅画框（9:16）里控制条要更窄，别把时间挤没 */
 .w-hero__frame.is-portrait .vctl { gap: 6px; padding-left: 8px; padding-right: 8px; }
 .w-hero__frame.is-portrait .vctl__t { min-width: 30px; font-size: 10.5px; }
-/* 竖幅画框只有 240px 宽时，把总时长让给进度条，当前时间足够用了 */
-.w-hero__frame.is-portrait .vctl__t[data-dur] { display: none; }
+.w-hero__frame.is-portrait .vctl__vol { width: 46px; }
 /* 竖幅画框只有 240px 宽时，把总时长让给进度条，当前时间足够用了 */
 .w-hero__frame.is-portrait .vctl__t[data-dur] { display: none; }
 
@@ -619,6 +658,7 @@ video.w-hero__media {
   .vctl { gap: 7px; padding: 24px 10px 8px; }
   .vctl__t { min-width: 30px; font-size: 10.5px; }
   .vctl__b { width: 24px; height: 24px; }
+  .vctl__vol { width: 52px; }
 }
 
 /* 超大屏：标题跟着放大，否则 52px 在 2560 上会显得像正文。

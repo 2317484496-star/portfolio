@@ -24,6 +24,7 @@
     pause: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24"><path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.4z" fill="currentColor"/></svg>',
     replay: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12a7 7 0 1 0 2.2-5"/><path d="M5 5v4.4h4.4"/></svg>',
     vol: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4z"/><path d="M15.6 9a4.2 4.2 0 0 1 0 6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>',
+    volLow: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4z"/><path d="M15.6 9a4.2 4.2 0 0 1 0 6"/></svg>',
     muted: '<svg ' + SVG_OPEN + ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 9.5h3.2L12 5.4v13.2L7.2 14.5H4z"/><path d="M16 9.5l4.6 5M20.6 9.5l-4.6 5"/></svg>'
   };
 
@@ -325,6 +326,7 @@
       '<span class="vctl__t" data-cur>00:00</span>' +
       '<input class="vctl__seek" type="range" min="0" max="1000" step="1" value="0" aria-label="播放进度，可左右拖动">' +
       '<span class="vctl__t" data-dur>00:00</span>' +
+      '<input class="vctl__vol" type="range" min="0" max="100" step="1" value="60" aria-label="音量，可左右拖动">' +
       '<button class="vctl__b" type="button" data-act="mute" aria-label="静音">' + ICO.vol + '</button>' +
       '<button class="vctl__b" type="button" data-act="fs" aria-label="全屏观看">' + ICO.expand + '</button>';
     frame.appendChild(bar);
@@ -334,6 +336,7 @@
     var durEl = bar.querySelector('[data-dur]');
     var toggle = bar.querySelector('[data-act="toggle"]');
     var muteBtn = bar.querySelector('[data-act="mute"]');
+    var vol = bar.querySelector('.vctl__vol');
     var fsBtn = bar.querySelector('[data-act="fs"]');
     var dragging = false;
 
@@ -425,11 +428,76 @@
     });
     seek.addEventListener('change', function () { dragging = false; });
 
+    /* —— 音量 ——
+       原来只做静音开关，音量固定是浏览器默认的 1.0，外放第一声很冲。
+       现在给一条滑杆，默认落到 0.6，并把选择记在本地，下次进来还是这个音量。
+
+       iOS 的 <video>.volume 是只读的（写进去读回来还是 1），那边没有可调
+       余地，只能静音。所以探测一下：不支持就把滑杆撤掉，只留静音键 ——
+       摆一条拖了没反应的滑杆，比没有更糟。 */
+    var VOL_KEY = 'wb.vol';
+    var VOL_DEFAULT = 0.6;
+    var lastVol = Math.round(VOL_DEFAULT * 100);
+
+    function volStored() {
+      try {
+        var s = window.localStorage.getItem(VOL_KEY);
+        if (s === null) return null;
+        var n = parseFloat(s);
+        return isFinite(n) ? Math.min(1, Math.max(0, n)) : null;
+      } catch (e) { return null; }
+    }
+    function volStore(n) {
+      try { window.localStorage.setItem(VOL_KEY, String(n)); } catch (e) {}
+    }
+    var canVol = (function () {
+      try {
+        var t = v.volume;
+        v.volume = 0.35;
+        var ok = Math.abs(v.volume - 0.35) < 0.02;
+        v.volume = t;
+        return ok;
+      } catch (e) { return false; }
+    })();
+    if (!canVol) bar.classList.add('is-novol');
+
+    function paintVol(pct) {
+      vol.style.setProperty('--p', pct + '%');
+      var quiet = pct <= 0;
+      muteBtn.innerHTML = quiet ? ICO.muted : (pct < 55 ? ICO.volLow : ICO.vol);
+      muteBtn.classList.toggle('is-off', quiet);
+      muteBtn.setAttribute('aria-label', quiet ? '恢复声音' : '静音');
+    }
+
+    /* remember 只决定「要不要落本地」；lastVol 永远跟着最近一次非零值走，
+       这样从静音里恢复时能回到用户刚才那个音量，而不是跳回默认。 */
+    function applyVol(pct, remember) {
+      pct = Math.max(0, Math.min(100, Math.round(pct)));
+      vol.value = String(pct);
+      paintVol(pct);
+      if (canVol) {
+        try { v.volume = pct / 100; } catch (e) {}
+        if (pct > 0) v.muted = false;
+      } else {
+        v.muted = pct <= 0;
+      }
+      /* 静音和拖到 0 都不写存储：那是临时动作，存下来会让下次打开先没声音，
+         容易被当成「坏了」。只记住确实在听的音量。 */
+      if (pct > 0) {
+        lastVol = pct;
+        if (remember) volStore(pct / 100);
+      }
+    }
+
+    var savedVol = volStored();
+    applyVol(savedVol === null ? Math.round(VOL_DEFAULT * 100) : Math.round(savedVol * 100), false);
+
+    vol.addEventListener('input', function () { applyVol(+vol.value, false); });
+    vol.addEventListener('change', function () { applyVol(+vol.value, true); });
+
     muteBtn.addEventListener('click', function () {
-      v.muted = !v.muted;
-      muteBtn.classList.toggle('is-off', v.muted);
-      muteBtn.innerHTML = v.muted ? ICO.muted : ICO.vol;
-      muteBtn.setAttribute('aria-label', v.muted ? '取消静音' : '静音');
+      var cur = canVol ? Math.round(v.volume * 100) : +vol.value;
+      applyVol(cur > 0 ? 0 : (lastVol > 0 ? lastVol : Math.round(VOL_DEFAULT * 100)), false);
     });
 
     fsBtn.addEventListener('click', function () {
