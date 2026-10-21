@@ -172,10 +172,17 @@
       v.remove();
       var bar = frame.querySelector('.vctl');
       if (bar) bar.remove();
-      frame.classList.remove('is-video', 'is-playing', 'is-idle', 'is-ended', 'is-portrait', 'is-landscape');
+      frame.onpointerdown = null;
+      frame.onpointermove = null;
+      frame.classList.remove('is-playing', 'is-idle', 'is-ended', 'is-portrait', 'is-landscape');
+      /* 先回到这一部作品该有的口径，再把播放键收掉：
+         这一次确实放不出来，留一个点了没反应的键比没有键更糟。
+         切走再回来会重新走 render，那时还有一次机会。 */
+      self._syncHeroState();
       var btn = frame.querySelector('#wPlay');
-      if (btn) btn.style.display = '';
-      self._toast(msg);
+      if (btn) btn.style.display = 'none';
+      /* 「素材还没上传」是施工口径，只写给作者看；访客看到的是占位视觉 */
+      if (U.DEV) self._toast(msg);
     }
 
     v.addEventListener('error', function () {
@@ -445,15 +452,20 @@
         if (!v.paused) frame.classList.add('is-idle');
       }, 2400);
     }
-    frame.addEventListener('pointermove', wake);
+    /* 这两个用 on* 赋值而不是 addEventListener：_videoBar 每播一次都会执行一遍，
+       addEventListener 只加不减，几轮下来画框上叠着好几层，而每一层的闭包
+       握着的是当时那个 <video>（早被 remove() 了）。手机上点一下画面会连着
+       触发好几次播放/暂停，净效果就是「点了没反应」。
+       赋值是替换，永远只有一份，也顺手断掉对旧元素的引用。 */
+    frame.onpointermove = wake;
     /* 触屏没有 hover：点画面唤出控制条，再点画面才是播放/暂停 */
-    frame.addEventListener('pointerdown', function (ev) {
+    frame.onpointerdown = function (ev) {
       wake();
       if (ev.pointerType === 'mouse') return;
       if (ev.target.closest && ev.target.closest('.vctl')) return;
       if (ev.target.closest && ev.target.closest('#wPlay')) return;
       togglePlay();
-    });
+    };
     wake();
     this._videoWake = wake;
 
@@ -491,7 +503,20 @@
     v.remove();
     var bar = frame.querySelector('.vctl');
     if (bar) bar.remove();
-    frame.classList.remove('is-playing', 'is-idle', 'is-ended', 'is-video');
+    /* 摘掉播放期挂在画框上的手势，别让它继续指着已经拿走的 <video> */
+    frame.onpointerdown = null;
+    frame.onpointermove = null;
+    frame.classList.remove('is-playing', 'is-idle', 'is-ended');
+    /* 成片撤走 = 回到静态口径，播放键要立刻回来。
+       不能指望下一次 render 兜底 —— stopVideo 也会被「切到后台」「收起窥视」
+       这类路径直接调用，那些路径不跟一次完整重绘，按钮就永远停在上一次
+       _play 设的 display:none 上。这是「拖了一下播放键就没了」的直接来路。 */
+    var w = this.o.works[this.index];
+    var vid = !!(w && (w.type === 'video' || w.type === 'mixed'));
+    frame.classList.toggle('is-video', vid);
+    frame.classList.toggle('is-still', !vid);
+    var pb = frame.querySelector('#wPlay');
+    if (pb) pb.style.display = vid ? '' : 'none';
   };
 
   Stage.prototype._toast = function (msg) {
@@ -504,17 +529,20 @@
     var w = this.o.works[this.index];
     var f = document.getElementById('wHeroFrame');
     if (!w || !f) return;
-    var miss = !!U._missing[w.media.hero];
+    /* 播放键只看「这部作品声明的形态」，不看主视觉图加载成没成功。
+       图片加载结果受弱网影响，切换太快时还会被浏览器 abort 掉，
+       而 U._missing 是一次失败就永久记着的缓存 —— 拿它当开关，
+       手机上一张图没赶上，这部作品的播放键就再也回不来了。
+       素材确实没上传时由 _play 的 bail() 兜底，不在这里提前判死。 */
     var vid = w.type === 'video' || w.type === 'mixed';
-    var ok = !miss && vid;
     var pb = f.querySelector('#wPlay');
-    f.classList.toggle('is-video', ok);
-    f.classList.toggle('is-still', !ok);
+    f.classList.toggle('is-video', vid);
+    f.classList.toggle('is-still', !vid);
     /* 已经有 <video> 在场时不能把中央 PLAY 再摆出来压住画面 */
-    if (pb) pb.style.display = (ok && !f.querySelector('video')) ? '' : 'none';
+    if (pb) pb.style.display = (vid && !f.querySelector('video')) ? '' : 'none';
     var tc = document.getElementById('wHeroTc');
     if (tc) {
-      tc.innerHTML = ok
+      tc.innerHTML = vid
         ? '<b>REC</b><span>' + U.esc(w.heroTc) + '</span>'
         : '<b>STILL</b><span>静态视觉 · 成片待上线</span>';
     }

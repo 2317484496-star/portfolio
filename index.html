@@ -14,6 +14,10 @@
 (function () {
   if (!/(^|\.)github\.io$/i.test(location.hostname)) return;
   if (/[?&]stay=1(?:&|$)/.test(location.search)) return;
+  /* 微信内置浏览器：国内托管那边是平台级拒绝，微信 UA 一进来就是 403
+     「当前应用不支持在微信内打开」。跳过去等于把访客送到一堵墙上，
+     所以微信里老老实实留在 GitHub 这一份 —— 慢，但打得开。 */
+  if (/MicroMessenger/i.test(navigator.userAgent)) return;
   location.replace('https://storyboard-portfolio-10922.app.workbuddy.host/?sharecode=D4R4DK3QQ6');
 })();
 </script>
