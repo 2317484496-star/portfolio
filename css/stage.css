@@ -645,7 +645,11 @@ video.w-hero__media {
 }
 /* iOS 上 <video>.volume 只读，这条滑杆拖了也不会有反应，索性不摆 */
 .vctl.is-novol .vctl__vol { display: none; }
-.vctl.is-loading .vctl__vol { opacity: 0.4; pointer-events: none; }
+/* 缓冲中只压暗、不锁死：音量跟解码进度毫无关系，而这个「还在转圈」的时刻
+   恰恰是用户最想先把声音调小的时候 —— 锁住就等于「拖不动」。 */
+.vctl.is-loading .vctl__vol { opacity: 0.5; }
+/* 同理，静音键在缓冲期也必须能按 */
+.vctl.is-loading .vctl__b[data-act="mute"] { opacity: 1; pointer-events: auto; }
 
 /* 竖幅画框（9:16）里控制条要更窄，别把时间挤没 */
 .w-hero__frame.is-portrait .vctl { gap: 6px; padding-left: 8px; padding-right: 8px; }
